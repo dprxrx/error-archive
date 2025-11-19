@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: 192.168.0.169:443/project/error-archive-frontend:1.3
+        image: 192.168.0.169:443/project/error-archive-frontend:1.7
         imagePullPolicy: Always
         ports:
         - containerPort: 80
