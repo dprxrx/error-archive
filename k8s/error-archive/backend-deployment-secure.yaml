@@ -5,7 +5,8 @@ metadata:
   namespace: error-archive
   labels:
     app: backend
-    version: "1.1"
+    version: "1.5"
+    security: enabled
 spec:
   replicas: 3
   selector:
@@ -15,15 +16,26 @@ spec:
     metadata:
       labels:
         app: backend
-        version: "1.1"
+        version: "1.5"
+        security: enabled
     spec:
+      # ServiceAccount 사용 (루트 사용 금지)
+      serviceAccountName: backend-sa
+      securityContext:
+        # Pod 레벨 보안 설정
+        runAsNonRoot: true
+        runAsUser: 1000  # Node.js 권장 사용자
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: backend
-        image: 192.168.0.169:443/project/error-archive-backend:1.9
+        image: 192.168.0.169:443/project/error-archive-backend:1.5
         imagePullPolicy: Always
         ports:
-        - containerPort: 3000
-          name: http
+        - name: http
+          containerPort: 3000
         env:
         - name: JWT_SECRET
           value: k8spass#jwt
@@ -33,6 +45,16 @@ spec:
           value: 75218448ddb01cb67aec079a8dbd61ae
         - name: KAKAO_CLIENT_SECRET
           value: jqAC1gVOlf7cBhb500rReivNfJ3o5F59
+        securityContext:
+          # Container 레벨 보안 설정
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # Node.js는 쓰기 권한 필요
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+            - ALL
         resources:
           limits:
             cpu: 500m
