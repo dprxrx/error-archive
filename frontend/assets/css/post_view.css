@@ -1,0 +1,198 @@
+/* ===============================
+   🔹 게시글 상세보기 전용 스타일
+================================*/
+
+/* 컨테이너 (list와 동일 스타일 유지) */
+.post-container {
+  display: block;                /* flex나 grid 영향 제거 */
+  position: relative;            /* 레이아웃 독립 */
+  width: 1200px !important;      /* 진짜 고정 */
+  min-width: 1200px;             /* 줄어드는 거 방지 */
+  max-width: 1200px;             /* 커지는 거 방지 */
+  margin: 80px auto 60px auto;   /* 화면 가운데 고정 */
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  padding: 35px 40px;
+  box-sizing: border-box;        /* 패딩 포함해도 1200px 유지 */
+  overflow-x: hidden;            /* 내부요소 넘칠 때 스크롤 방지 */
+}
+
+/* 게시글 헤더 */
+.post-header {
+  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: 20px;
+  margin-bottom: 25px;
+}
+
+.post-header h2 {
+  font-size: 26px;
+  color: #222;
+  margin-bottom: 15px;      /* 제목 아래 여백 추가 */
+}
+
+.post-meta {
+  font-size: 14px;
+  color: #777;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;      /* 작성자와 본문 사이 여백 */
+}
+
+/* 게시글 본문 */
+.post-content {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+/* 섹션 간 여백 (내용 ↔ 해결 구분) */
+.post-section {
+  margin-bottom: 35px;      /* 섹션 간 여백 */
+}
+
+/* ✅ 추천/비추천 영역 */
+.vote-section {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.vote-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vote-btn.upvote {
+  background-color: #e7f3ff;
+  color: #007bff;
+}
+
+.vote-btn.upvote:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.vote-btn.downvote {
+  background-color: #fff2f2;
+  color: #d9534f;
+}
+
+.vote-btn.downvote:hover {
+  background-color: #d9534f;
+  color: #fff;
+}
+
+/* ✅ 댓글 입력창 */
+.comment-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 25px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.comment-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.comment-box button {
+  background-color: #222;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.comment-box button:hover {
+  background-color: #007bff;
+}
+
+/* ✅ 댓글 목록 */
+.comment-list {
+  margin-top: 25px;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 15px;
+  max-height: 300px;        /* 댓글 목록 높이 제한 */
+  overflow-y: auto;         /* 댓글 스크롤 가능 */
+  scrollbar-width: thin;
+}
+
+.comment-item {
+  margin-bottom: 15px;
+}
+
+.comment-item strong {
+  color: #444;
+}
+
+.comment-item p {
+  margin: 4px 0 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.btn_addel {
+  padding: 14px 28px;              /* 버튼 크기 (세로, 가로) */
+  font-size: 16px;                 /* 글자 크기 */
+  font-weight: 600;                /* 글자 두께 */
+  border: none;                    /* 기본 테두리 제거 */
+  border-radius: 8px;              /* 둥근 모서리 */
+  cursor: pointer;                 /* 마우스 포인터 변경 */
+  transition: all 0.2s ease;       /* hover 시 부드러운 효과 */
+  margin-right: 12px;              /* 버튼 사이 간격 */
+}
+
+#btn_ad {
+  background-color: #007bff;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+#btn_ad:hover {
+  background-color: #0056d2;
+  transform: translateY(-2px);
+}
+
+#btn_del {
+  background-color: #dc3545;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+#btn_del:hover {
+  background-color: #b91c1c;
+  transform: translateY(-2px);
+}
+
+
+.dropdown-content.show { display:block; }
+.action-btns { margin-top:15px; }
+.action-btns button { margin-right:10px; padding:6px 12px; border:none; border-radius:6px; background:#333; color:#fff; cursor:pointer; }
+.action-btns button:hover { background:#555; }
+textarea.editable {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  resize: vertical;
+  font-size: 15px;
+}
+.vote-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

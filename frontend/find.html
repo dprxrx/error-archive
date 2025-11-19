@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Archive - ID/PW 찾기</title>
+
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/form.css">
+</head>
+<body>
+
+  <div class="main-container">
+    <div class="logo-box">
+      <img src="assets/logo_img.png" alt="Error Archive Logo" class="logo">
+    </div>
+
+    <div class="card-box find-box">
+      <input type="radio" id="tab-id" name="tab" checked>
+      <input type="radio" id="tab-pw" name="tab">
+
+      <div class="tab-header">
+        <label for="tab-id" class="tab-label">ID 찾기</label>
+        <label for="tab-pw" class="tab-label">PW 찾기</label>
+      </div>
+
+      <!-- ✅ ID 찾기 -->
+      <div class="tab-content" id="content-id">
+        <form id="form-find-id">
+          <label for="find-email">이메일 입력</label>
+          <input type="email" id="find-email" name="find-email" placeholder="이메일 입력">
+          <div id="error-id"></div>
+          <button type="button" class="btn-primary" id="btn-find-id">ID 찾기</button>
+        </form>
+        <div class="sub-links">
+          <a href="index">로그인 하기</a>
+        </div>
+      </div>
+
+      <!-- ✅ PW 찾기 -->
+      <div class="tab-content" id="content-pw">
+        <form id="form-find-pw">
+          <label for="find-id">ID 입력</label>
+          <input type="text" id="find-id" name="find-id" placeholder="아이디 입력">
+
+          <label for="find-email2">이메일 입력</label>
+          <input type="email" id="find-email2" name="find-email2" placeholder="이메일 입력">
+          <div id="error-pw"></div>
+          <button type="button" class="btn-primary" id="btn-find-pw">PW 찾기</button>
+        </form>
+        <div class="sub-links">
+          <a href="index">로그인 하기</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    /* ✅ ID 찾기 버튼 클릭 */
+    document.getElementById("btn-find-id").addEventListener("click", async () => {
+      const email = document.getElementById("find-email").value.trim();
+      const errorBox = document.getElementById("error-id");
+      errorBox.innerHTML = "";
+
+      if (!email) {
+        showError(errorBox, "이메일을 입력해주세요.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/find_id`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ "find-email": email })
+        });
+        const data = await res.json();
+        alert(data.message);
+      } catch (err) {
+        alert("서버와의 통신 중 오류가 발생했습니다.");
+        console.error(err);
+      }
+    });
+
+    /* ✅ PW 찾기 버튼 클릭 */
+    document.getElementById("btn-find-pw").addEventListener("click", async () => {
+      const idVal = document.getElementById("find-id").value.trim();
+      const emailVal = document.getElementById("find-email2").value.trim();
+      const errorBox = document.getElementById("error-pw");
+      errorBox.innerHTML = "";
+
+      // 🔸 세 가지 경우로 구분
+  if (!idVal && !emailVal) {
+    showError(errorBox, "아이디와 이메일을 모두 입력해주세요.");
+    return;
+  } else if (!idVal) {
+    showError(errorBox, "아이디를 입력해주세요.");
+    return;
+  } else if (!emailVal) {
+    showError(errorBox, "이메일을 입력해주세요.");
+    return;
+  }
+
+
+      try {
+        const res = await fetch(`/api/find_pw`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            "find-id": idVal,
+            "find-email2": emailVal
+          })
+        });
+        const data = await res.json();
+        alert(data.message);
+      } catch (err) {
+        alert("서버와의 통신 중 오류가 발생했습니다.");
+        console.error(err);
+      }
+    });
+
+    // 공통 오류 출력 함수
+    function showError(container, msg) {
+      const div = document.createElement("div");
+      div.className = "error-msg";
+      div.textContent = msg;
+      container.appendChild(div);
+    }
+  </script>
+
+</body>
+</html>
+
+

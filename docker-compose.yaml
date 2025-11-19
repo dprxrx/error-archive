@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: dprxrx/error-archive-frontend:2.0   # ← 프론트 이미지
+    container_name: error-archive-frontend
+    ports:
+      - "8080:80"   # 외부 : 내부(Nginx)
+    depends_on:
+      - backend
+    networks:
+      - error-archive-net
+
+  backend:
+    image: dprxrx/error-archive-backend:2.0    # ← 백엔드 이미지
+    container_name: error-archive-backend
+    environment:
+      - PORT=3000
+
+      # 🔥 MongoDB Atlas 연결
+      - MONGO_URI=mongodb+srv://errorAdmin:pass123%23@errorarchive.bjd5r0c.mongodb.net/errorArch?retryWrites=true&w=majority
+
+      # 🔥 프론트에서 로그인 리디렉션
+      - PUBLIC_IP=http://192.168.56.101:8080   # ← VM 환경 기준 (프론트 주소)
+
+      # 🔥 JWT Secret
+      - JWT_SECRET=k8spass#jwt
+
+      # 🔥 소셜로그인 (현 환경에서 필요하면 입력)
+      - KAKAO_CLIENT_ID=your-kakao-id
+      - KAKAO_CLIENT_SECRET=your-kakao-secret
+      - NAVER_CLIENT_ID=your-naver-id
+      - NAVER_CLIENT_SECRET=your-naver-secret
+    ports:
+      - "3000:3000"  # 외부에서도 테스트 가능하도록 오픈
+    networks:
+      - error-archive-net
+
+networks:
+  error-archive-net:
+

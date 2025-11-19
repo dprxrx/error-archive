@@ -1,0 +1,124 @@
+label {
+  display: block;
+  text-align: left;
+  font-size: 14px;
+  color: #444;
+  margin-top: 15px;
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cfd3d8;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* 공통 버튼 */
+.btn-primary {
+  width: 100%;
+  padding: 13px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-top: 25px;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,123,255,0.25);
+}
+
+.check-complete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e9f3ff;
+  color: #007bff;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  width: 90px;  /* 버튼 크기랑 맞추기 */
+  height: 42px; /* 버튼 높이 동일 */
+  margin-left: 8px;
+  box-shadow: 0 3px 6px rgba(0,123,255,0.15);
+  cursor: default;
+  user-select: none;
+  white-space: nowrap; /* ✔ 체크 완료 줄바꿈 방지 */
+}
+
+/* 회원가입 input+버튼 한 줄 */
+.input-with-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-check {
+  background-color: #007bff;
+  color: white;
+  font-size: 13px;
+  border-radius: 8px;
+  padding: 16px 18px;
+  font-weight: 600;
+  transition: 0.2s;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+
+.btn-check:hover {
+  background-color: #0056b3;
+}
+
+/* ID/PW 찾기 탭 구조 */
+.find-box input[type="radio"] {
+  display: none;
+}
+
+.tab-header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-bottom: 2px solid #ccc;
+}
+
+.tab-label {
+  flex: 1;
+  text-align: center;
+  padding: 12px 0;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+/* 탭 선택 표시 */
+#tab-id:checked ~ .tab-header label[for="tab-id"],
+#tab-pw:checked ~ .tab-header label[for="tab-pw"] {
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+}
+
+/* 탭 콘텐츠 */
+.tab-content {
+  display: none;
+  margin-top: 25px;
+  text-align: left;
+}
+
+/* 선택된 탭 보이기 */
+#tab-id:checked ~ #content-id {
+  display: block;
+}
+
+#tab-pw:checked ~ #content-pw {
+  display: block;
+}

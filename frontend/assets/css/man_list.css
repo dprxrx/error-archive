@@ -1,0 +1,145 @@
+/* ===============================
+   🔹 게시글 목록 전용 스타일
+================================*/
+
+/* 리스트 컨테이너 (게시판 본문 박스) */
+.list-container {
+  margin-top: 50px;           /* 네비 아래 여백 */
+  margin-bottom: 60px;        /* 하단 공백 */
+  width: 90%;
+  max-width: 1300px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  padding: 35px 40px;
+  min-height: calc(100vh - 280px); /* 네비+여백 제외 */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 헤더 영역 */
+.list-header {
+  display: flex;
+  justify-content: flex-end; /* ← 오른쪽 끝으로 정렬 */
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.category-box select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* 글쓰기 버튼 */
+.btn-write {
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 10px 22px;
+  transition: 0.25s ease;
+}
+
+.btn-write:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+/* 테이블 구조 */
+.post-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.post-table th, 
+.post-table td {
+  text-align: left;
+  padding: 18px 15px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.post-table th {
+  color: #444;
+  font-size: 16px;
+}
+
+.post-table td a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.post-table td a:hover {
+  color: #0056b3;
+}
+
+/* 열 정렬 (제목 / ID / 작성날짜 비율 고정) */
+.post-table th:nth-child(1),
+.post-table td:nth-child(1) {
+  width: 60%;
+}
+
+.post-table th:nth-child(2),
+.post-table td:nth-child(2) {
+  width: 18%;
+  text-align: center;
+}
+
+.post-table th:nth-child(3),
+.post-table td:nth-child(3) {
+  width: 22%;
+  text-align: right;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 35px;
+  padding-bottom: 60px;
+  flex-wrap: wrap;
+}
+
+.pagination a {
+  text-decoration: none;
+  color: #007bff;
+  border: 1px solid #007bff;
+  border-radius: 6px;
+  padding: 8px 14px;
+  transition: 0.2s;
+  font-weight: 500;
+}
+
+.pagination a:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.pagination a.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination a.prev,
+.pagination a.next {
+  font-weight: bold;
+}
+
+/* 중앙 정렬 보장 */
+main.list-container {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}

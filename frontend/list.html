@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Archive - 글 목록</title>
+
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/list.css">
+</head>
+<body>
+
+  <!-- 상단 네비게이션 -->
+  <header class="nav-bar">
+    <div class="nav-left">
+      <img src="assets/logo_img.png" alt="Error Archive Logo" class="nav-logo">
+      <a href="list" class="nav-list">Error List</a>
+    </div>
+    <div class="nav-right">
+      <div class="dropdown" id="mypage-dropdown">
+        <button class="nav-link" id="mypage-btn">MY Page ▾</button>
+        <div class="dropdown-content" id="mypage-menu">
+          <a href="list?mode=my">📝오답노트</a>
+        </div>
+      </div>
+      <a href="#" class="nav-logout">Log out</a>
+    </div>
+  </header>
+
+  <!-- 메인 -->
+  <main class="list-container">
+    <div class="list-header">
+      <div class="header-left">
+        <a href="post_write" class="btn-write">+ 글쓰기</a>
+      </div>
+      <div class="header-right">
+        <div class="category-box">
+          <label for="category">카테고리</label>
+          <select id="category" name="category">
+            <option value="0">전체</option>
+            <option value="1">Linux</option>
+            <option value="2">Database</option>
+            <option value="3">Python</option>
+            <option value="4">Docker</option>
+            <option value="5">Kubernetes</option>
+            <option value="6">AWS</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <table class="post-table">
+      <thead>
+        <tr>
+          <th>제목</th>
+          <th>카테고리</th>
+          <th>ID</th>
+          <th>작성날짜</th>
+        </tr>
+      </thead>
+      <tbody id="post-body">
+        <!-- JS에서 자동으로 채워짐 -->
+      </tbody>
+    </table>
+
+    <div class="pagination" id="pagination"></div>
+
+    <!-- ✅ 검색 영역 -->
+    <div class="search-section">
+      <hr style="margin: 25px 0;">
+      <div class="search-box" style="text-align: center; margin-top: 10px;">
+        <select id="search-type" style="padding: 6px; border-radius: 6px;">
+          <option value="제목+내용">제목+내용</option>
+          <option value="작성자">작성자</option>
+        </select>
+        <input type="text" id="search-input" placeholder="검색어를 입력하세요" style="padding: 6px; width: 240px; border-radius: 6px; margin-left: 5px;">
+        <button id="search-btn" class="btn-search" style="padding: 6px 12px; border-radius: 6px; margin-left: 5px;">검색</button>
+        <button id="reset-btn" class="btn-reset" style="padding: 6px 12px; border-radius: 6px; margin-left: 5px;">초기화</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    // ✅ JWT가 URL에 있을 경우 localStorage에 저장
+    if (token) {
+      localStorage.setItem("jwt", token);
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const decoded = JSON.parse(atob(base64));
+        localStorage.setItem("user", JSON.stringify({
+          userId: decoded.userId,
+          name: decoded.name,
+          email: decoded.email,
+          role: "user",
+          provider: "kakao"
+        }));
+      } catch (e) {
+        console.error("❌ JWT 디코딩 실패:", e);
+      }
+      history.replaceState({}, document.title, "list");
+    }
+
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const mode = params.get("mode");
+    const navRight = document.querySelector(".nav-right");
+    const btnWrite = document.querySelector(".btn-write");
+    const mypageDropdown = document.getElementById("mypage-dropdown");
+
+    if (!userData) {
+      alert("로그인이 필요합니다.");
+      window.location.href = "index";
+      return;
+    }
+
+    // ✅ 사용자 이름 표시
+    const nameTag = document.createElement("span");
+    nameTag.textContent = `${userData.name} 님`;
+    nameTag.style.marginRight = "10px";
+    navRight.prepend(nameTag);
+
+    // ✅ 모드별 UI 표시 제어
+    if (userData.role === "admin" || mode === "my") {
+      btnWrite.style.display = "none";
+      mypageDropdown.style.display = "none";
+    }
+
+    // ✅ 로그아웃
+    document.querySelector(".nav-logout").addEventListener("click", (e) => {
+      e.preventDefault();
+      localStorage.clear();
+      alert("로그아웃 되었습니다.");
+      window.location.href = "index";
+    });
+
+    // ✅ 드롭다운 메뉴
+    const btn = document.getElementById("mypage-btn");
+    const menu = document.getElementById("mypage-menu");
+
+    btn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.classList.toggle("show");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.remove("show");
+      }
+    });
+
+    // ✅ 게시글 로드
+    let posts = [];
+    const rowsPerPage = 10;
+    let currentPage = 1;
+
+    // ✅ 카테고리 이름 매핑 함수
+    function getCategoryName(code) {
+      switch (code) {
+        case 1: return "Linux";
+        case 2: return "Database";
+        case 3: return "Python";
+        case 4: return "Docker";
+        case 5: return "Kubernetes";
+        case 6: return "AWS";
+        default: return "기타";
+      }
+    }
+
+    async function fetchPosts() {
+      const category = document.getElementById("category").value;
+      const role = userData.role;
+      const author = userData.userId;
+
+      let url = `api/posts?category=${category}&role=${role}`;
+      if (mode === "my") url += `&mode=my&author=${author}`;
+
+      try {
+        const res = await fetch(url);
+        posts = await res.json();
+
+        displayPosts(currentPage);
+        setupPagination();
+      } catch (err) {
+        console.error("❌ 게시글 로드 실패:", err);
+      }
+    }
+
+    function displayPosts(page) {
+      const postBody = document.getElementById("post-body");
+      postBody.innerHTML = "";
+
+      if (!posts.length) {
+        postBody.innerHTML = `<tr><td colspan="4">게시글이 없습니다.</td></tr>`;
+        return;
+      }
+
+      const start = (page - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const pagePosts = posts.slice(start, end);
+
+      pagePosts.forEach(post => {
+        const date = new Date(post.createdAt).toISOString().split("T")[0];
+        const categoryName = getCategoryName(post.category);
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><a href="post_view?id=${post._id}">${post.title}</a></td>
+          <td>${categoryName}</td>
+          <td>${post.author}</td>
+          <td>${date}</td>
+        `;
+        postBody.appendChild(row);
+      });
+    }
+
+    function setupPagination() {
+      const pagination = document.getElementById("pagination");
+      pagination.innerHTML = "";
+      const pageCount = Math.ceil(posts.length / rowsPerPage);
+      if (pageCount <= 1) return;
+
+      for (let i = 1; i <= pageCount; i++) {
+        const btn = document.createElement("a");
+        btn.textContent = i;
+        if (i === currentPage) btn.classList.add("active");
+        btn.addEventListener("click", () => {
+          currentPage = i;
+          displayPosts(currentPage);
+          setupPagination();
+        });
+        pagination.appendChild(btn);
+      }
+    }
+
+    document.getElementById("category").addEventListener("change", () => {
+      currentPage = 1;
+      fetchPosts();
+    });
+
+    // ✅ 검색 기능 (Atlas 기반)
+    document.getElementById("search-btn").addEventListener("click", async () => {
+      const keyword = document.getElementById("search-input").value.trim();
+      const type = document.getElementById("search-type").value;
+      const role = JSON.parse(localStorage.getItem("user")).role; // ✅ 추가
+      if (!keyword) {
+        alert("검색어를 입력하세요.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/search?type=${encodeURIComponent(type)}&keyword=${encodeURIComponent(keyword)}`);
+        const data = await res.json();
+
+        posts = data;
+        currentPage = 1;
+        displayPosts(currentPage);
+        setupPagination();
+      } catch (err) {
+        console.error("❌ 검색 실패:", err);
+      }
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      document.getElementById("search-input").value = "";
+      fetchPosts();
+    });
+
+    // ✅ 특정 모드(admin, my)에서는 검색창 숨김
+    const searchSection = document.querySelector(".search-section");
+    if ((mode === "my" || userData.role === "admin") && searchSection) {
+      searchSection.style.display = "none";
+    }
+
+    fetchPosts();
+  });
+
+  // ✅ 뒤로가기 방지
+  window.addEventListener("pageshow", (event) => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData) {
+      if (event.persisted) window.location.reload();
+      else window.location.href = "index";
+    }
+  });
+</script>
+
+</body>
+</html>

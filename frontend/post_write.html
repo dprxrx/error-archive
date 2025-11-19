@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Error Archive - 글 작성</title>
+
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/post_write.css" />
+
+  <!-- ✅ Quill 에디터 -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+  <style>
+    .write-container {
+      width: 1200px;
+      margin: 80px auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      padding: 35px 40px;
+    }
+    .quill-editor {
+      height: 200px;
+      margin-bottom: 25px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .submit-btn {
+      background: #007bff;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .submit-btn:hover {
+      background: #0056d2;
+    }
+    .nav-username {
+      margin-right: 10px;
+      font-weight: normal; /* ✅ 굵기 제거 */
+    }
+  </style>
+</head>
+
+<body>
+  <header class="nav-bar">
+    <div class="nav-left">
+      <img src="assets/logo_img.png" alt="Error Archive Logo" class="nav-logo" />
+      <a href="list" class="nav-list">Error List</a>
+    </div>
+
+    <div class="nav-right">
+      <span class="nav-username" id="nav-username"></span> <!-- ✅ 이름 표시 (얇은 글씨) -->
+      <div class="dropdown" id="dropdown-area">
+        <button class="nav-link" id="mypage-btn">MY Page ▾</button>
+        <div class="dropdown-content" id="mypage-menu">
+          <a href="list?mode=my">📝 내가 쓴 글</a>
+        </div>
+      </div>
+      <a href="index" class="nav-logout">Log out</a>
+    </div>
+  </header>
+
+  <main class="write-container">
+    <h2 id="page-title">✍️ 글 작성</h2>
+    <form id="writeForm">
+      <label>제목</label>
+      <input type="text" id="title" placeholder="제목을 입력하세요" required style="width:100%; padding:8px; margin-bottom:20px;">
+
+      <label>카테고리</label>
+      <select id="category" style="width:100%; padding:8px; margin-bottom:20px;">
+        <option value="1">🐧 Linux</option>
+        <option value="2">💾 Database</option>
+        <option value="3" selected>🐍 Python</option>
+        <option value="4">🐳 Docker</option>
+        <option value="5">☸️ Kubernetes</option>
+        <option value="6">☁️ AWS</option>
+      </select>
+
+      <label>오류의 내용</label>
+      <div id="errorEditor" class="quill-editor"></div>
+
+      <label>해결 방법</label>
+      <div id="solutionEditor" class="quill-editor"></div>
+
+      <button type="submit" class="submit-btn">등록</button>
+    </form>
+  </main>
+
+  <script>
+  // ✅ 로그인 확인 및 이름 표시
+  const userData = JSON.parse(localStorage.getItem("user"));
+  if (!userData) {
+    alert("로그인이 필요합니다.");
+    window.location.href = "index";
+  } else {
+    document.getElementById("nav-username").textContent = `${userData.name} 님`;
+  }
+
+  // ✅ 드롭다운 제어
+  const btn = document.getElementById("mypage-btn");
+  const menu = document.getElementById("mypage-menu");
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    menu.classList.toggle("show");
+  });
+  document.addEventListener("click", e => {
+    if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
+  });
+
+  // ✅ 로그아웃
+  document.querySelector(".nav-logout").addEventListener("click", e => {
+    e.preventDefault();
+    localStorage.clear();
+    alert("로그아웃 되었습니다.");
+    window.location.href = "index";
+  });
+
+  // ✅ Quill 에디터 초기화
+  const quillOptions = {
+    theme: 'snow',
+    placeholder: '내용을 입력하세요...',
+    modules: {
+      toolbar: [
+        ['bold', 'italic', 'underline'],
+        [{ 'header': [1, 2, false] }],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        ['link', 'image']
+      ]
+    }
+  };
+
+  const errorEditor = new Quill('#errorEditor', quillOptions);
+  const solutionEditor = new Quill('#solutionEditor', quillOptions);
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode");
+    const postId = params.get("id");
+
+    if (mode === "edit" && postId) {
+      // ✅ 수정 모드
+      document.getElementById("page-title").textContent = "✏️ 글 수정";
+      document.querySelector(".submit-btn").textContent = "수정 완료";
+
+      try {
+        const res = await fetch(`/api/post/${postId}`);
+        const post = await res.json();
+
+        document.getElementById("title").value = post.title;
+        document.getElementById("category").value = post.category;
+        errorEditor.root.innerHTML = post.errorContent || "";
+        solutionEditor.root.innerHTML = post.solutionContent || "";
+
+        document.getElementById("writeForm").onsubmit = async (e) => {
+          e.preventDefault();
+
+          const updatedData = {
+            title: document.getElementById("title").value.trim(),
+            category: document.getElementById("category").value,
+            errorContent: errorEditor.root.innerHTML.trim(),
+            solutionContent: solutionEditor.root.innerHTML.trim()
+          };
+
+          const res = await fetch(`/api/post/${postId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedData)
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            alert("게시글 수정 완료!");
+            window.location.href = "list?mode=my";
+          } else alert(data.message || "수정 실패");
+        };
+      } catch (err) {
+        console.error("❌ 수정 데이터 로드 실패:", err);
+      }
+    } else {
+      // ✅ 새 글 작성 모드
+      document.getElementById("writeForm").onsubmit = async (e) => {
+        e.preventDefault();
+
+        const newData = {
+          title: document.getElementById("title").value.trim(),
+          category: document.getElementById("category").value,
+          author: userData.userId,
+          errorContent: errorEditor.root.innerHTML.trim(),
+          solutionContent: solutionEditor.root.innerHTML.trim()
+        };
+
+        const res = await fetch("/api/posts/new", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newData)
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert("게시글 등록 완료!");
+          window.location.href = "list";
+        } else alert(data.message || "등록 실패");
+      };
+    }
+  });
+  </script>
+</body>
+</html>
+
+

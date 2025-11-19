@@ -1,0 +1,254 @@
+/* ===============================
+   🔹 기본 전체 구조 (공통)
+================================*/
+body {
+  background: linear-gradient(to bottom, #D6E8F9, #7B96B6);
+  padding-top: 80px !important; /* 네비 높이만큼 띄우기 */
+  overflow-x: hidden;
+  font-family: "Pretendard", sans-serif;
+}
+
+html, body {
+  height: auto;
+  min-height: 100vh;
+}
+
+/* ===============================
+   🔹 로그인 화면 전용 레이아웃
+================================*/
+.main-container {
+  text-align: center;
+}
+
+.logo-box {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.back {
+  width: 30px;   /* 원하는 크기로 */
+  height: auto;   /* 비율 유지 */
+  cursor: pointer; /* 클릭 가능한 느낌 */
+}
+
+.logo {
+  width: 400px;
+  height: auto;
+}
+
+.card-box {
+  background: #F8FAFC;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  width: 420px;
+  padding: 35px 30px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column; /* 버튼들이 세로로 정렬되게 */
+  align-items: stretch;
+  gap: 0px; /* 버튼, form 간격 자동 정렬 */
+}
+
+.sub-links {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 13px;
+  color: #555;
+}
+
+.sub-links a {
+  text-decoration: none;
+  color: #222;
+  font-weight: 500;
+}
+
+.sub-links a:hover {
+  color: #007bff;
+}
+
+/* ===============================
+   🔹 네비게이션 (공통)
+================================*/
+/* ✅ 네비게이션 바 (모든 페이지 공통) */
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  background-color: #fff;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 35px;
+  z-index: 1000;
+}
+
+.nav-logo {
+  width: 210px;
+  max-height: 40px !important;
+  width: auto !important;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 35px; /* 🔹 로고와 글씨 사이 넓게 띄움 (기존 15 → 40) */
+}
+
+/* ✅ 네비 오른쪽 영역 */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* MY Page ↔ Log out 간격 */
+}
+
+/* ✅ 로그아웃 버튼 */
+.nav-logout {
+  color: #555;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: #f0f2f5;
+  border: 1px solid #d8dce2;
+  transition: all 0.2s ease;
+  
+}
+
+.nav-logout:hover {
+  background: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+.nav-list {
+  color: #007bff;
+  background: none;
+  border: none;
+  font-weight: 700;        /* 🔹 글자 조금 더 굵게 */
+  font-size: 20px;         /* 🔹 글씨 크기 살짝 키움 (기존 15 → 17) */
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.nav-list:hover {
+  color: #0056b3;
+  transform: translateY(-1px); /* 🔹 hover 시 살짝 위로 올라오는 자연스러운 효과 */
+}
+
+/* ===============================
+   🔹 MY PAGE 드롭다운
+================================*/
+.dropdown {
+  position: relative;
+}
+
+.nav-link {
+  color: #007bff;
+  background: none;
+  border: none;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  color: #0056b3;
+}
+
+/* ✅ 드롭다운 메뉴 */
+.dropdown-content {
+  position: absolute;
+  top: 45px; /* ✅ 기존 45px → 55px (10px 더 아래로) */
+  right: 0;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  padding: 14px 18px;
+  min-width: 180px;
+  display: none;
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: all 0.25s ease;
+  z-index: 200;
+}
+
+.dropdown-content.show {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dropdown-content a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #444;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.dropdown-content a:hover {
+  background-color: #f1f5ff;
+  color: #007bff;
+}
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .login-btn img {
+  width: 22px;           /* 🔹 아이콘 크기 조절 (기본 22px 정도가 자연스러움) */
+  height: auto;          /* 비율 유지 */
+  margin-right: 10px;    /* 텍스트와 간격 */
+  vertical-align: middle; /* 세로 정렬 맞추기 */
+}
+
+    .kakao-btn {
+      margin-top: 14px;
+      background: #FEE500;
+      color: white;
+    }
+
+    .kakao-btn:hover {
+      background: #FFCD00;
+      color: #3A1D1D;
+    }
+
+    .naver-btn {
+      background: #03C75A;
+      color: white;
+    }
+
+  .naver-btn:hover {
+  background: #02B152; /* ✅ 네이버 그린보다 살짝 어두운 공식 톤 */
+}
+
+#snowCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* 클릭 이벤트 막지 않기 */
+  z-index: 0; /* 가장 뒤에 와야 함 */
+}

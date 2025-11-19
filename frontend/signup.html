@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Archive - 회원가입</title>
+
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/form.css">
+</head>
+<body>
+
+  <div class="main-container">
+    <div class="logo-box">
+      <img src="assets/logo_img.png" alt="Error Archive Logo" class="logo">
+    </div>
+
+    <div class="card-box">
+	<form id="signup-form">
+        <label for="userid">ID 입력</label>
+        <div class="input-with-btn">
+          <input type="text" id="userid" name="userid" placeholder="아이디 입력">
+          <button type="button" class="btn-check" id="btn-check-id">중복체크</button>
+        </div>
+
+        <label for="email">이메일 입력</label>
+        <div class="input-with-btn">
+          <input type="email" id="email" name="email" placeholder="이메일 입력">
+          <button type="button" class="btn-check" id="btn-check-email">중복체크</button>
+        </div>
+
+	<label for="name">이름 입력</label>
+	<div class="input-with-btn">
+          <input type="text" id="name" name="name" placeholder="이름 입력">
+        </div>
+
+        <label for="pw">PW 입력</label>
+        <input type="password" id="pw" name="pw" placeholder="비밀번호 입력">
+
+        <label for="pw2">PW 재입력</label>
+        <input type="password" id="pw2" name="pw2" placeholder="비밀번호 재입력">
+
+        <button type="submit" class="btn-primary">회원가입하기</button>
+      </form>
+      <div class="sub-links">
+          <a href="index">로그인 하기</a>
+
+        </div>
+    </div>
+  </div>
+
+  <script>
+    // 상태 플래그
+    let idChecked = false;
+    let emailChecked = false;
+
+    // ID 중복체크 버튼 클릭
+    document.querySelector('#btn-check-id').addEventListener('click', async () => {
+      const userid = document.getElementById('userid').value.trim();
+      if (!userid) return alert('아이디를 입력해주세요!');
+
+      try {
+        const res = await fetch('/api/check-id?userid=' + encodeURIComponent(userid));
+        const data = await res.json();
+
+        if (data.exists) {
+          alert('이미 사용 중인 아이디입니다 ❌');
+          idChecked = false;
+        } else {
+          alert('사용 가능한 아이디입니다 ✅');
+          idChecked = true;
+          const btn = document.querySelector('#btn-check-id');
+          btn.outerHTML = '<span class="check-complete">✔ 체크 완료</span>';
+        }
+        updateSignupButton();
+
+      } catch (err) {
+        console.error(err);
+        alert('서버와 연결할 수 없습니다.');
+      }
+    });
+
+    // 이메일 중복체크 버튼 클릭
+    document.querySelector('#btn-check-email').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      if (!email) return alert('이메일을 입력해주세요!');
+
+      try {
+        const res = await fetch('/api/check-email?email=' + encodeURIComponent(email));
+        const data = await res.json();
+
+        if (data.exists) {
+          alert('이미 등록된 이메일입니다 ❌');
+          emailChecked = false;
+        } else {
+          alert('사용 가능한 이메일입니다 ✅');
+          emailChecked = true;
+          const btn = document.querySelector('#btn-check-email');
+          btn.outerHTML = '<span class="check-complete">✔ 체크 완료</span>';
+        }
+        updateSignupButton();
+
+      } catch (err) {
+        console.error(err);
+        alert('서버와 연결할 수 없습니다.');
+      }
+    });
+
+    const pw = document.getElementById('pw');
+    const pw2 = document.getElementById('pw2');
+
+    pw2.addEventListener('input', checkPasswordMatch);
+    pw.addEventListener('input', checkPasswordMatch);
+
+    function checkPasswordMatch() {
+      let msg = document.querySelector('.pw-error-msg');
+      if (!msg) {
+        msg = document.createElement('div');
+        msg.className = 'pw-error-msg';
+        pw2.insertAdjacentElement('afterend', msg);
+      }
+
+      if (pw.value && pw2.value) {
+        if (pw.value !== pw2.value) {
+          msg.textContent = '비밀번호가 일치하지 않습니다 ❌';
+          msg.style.color = '#e74c3c';
+        } else {
+          msg.textContent = '비밀번호가 일치합니다 ✅';
+          msg.style.color = '#28a745';
+        }
+      } else {
+        msg.textContent = '';
+      }
+    }
+
+    // ✅ 회원가입 버튼 활성화 / 비활성화 제어
+    function updateSignupButton() {
+      const signupBtn = document.querySelector('.btn-primary');
+      if (idChecked && emailChecked) {
+        signupBtn.disabled = false;
+        signupBtn.style.opacity = '1';
+        signupBtn.style.cursor = 'pointer';
+      } else {
+        signupBtn.disabled = true;
+        signupBtn.style.opacity = '0.6';
+        signupBtn.style.cursor = 'not-allowed';
+      }
+    }
+
+    // ✅ 회원가입 제출 시 검사 및 fetch 전송
+  const form = document.querySelector('form');
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (!idChecked || !emailChecked) {
+      alert('중복체크를 완료해주세요!');
+      return;
+    }
+
+    if (pw.value !== pw2.value) {
+      alert('비밀번호가 일치하지 않습니다 ❌');
+      return;
+    }
+
+    const userid = document.getElementById('userid').value.trim();
+    const email = document.getElementById('email').value.trim();
+const name = document.getElementById('name').value.trim();  // ✅ 추가
+
+
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userid, email, pw: pw.value, name })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('회원가입 완료 ✅');
+        window.location.href = 'index'; // 로그인 페이지로 이동
+      } else {
+        alert(data.message || '회원가입 실패 ❌');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('서버 연결 실패 ❌');
+    }
+  });
+
+    // 페이지 로드 시 기본적으로 비활성화
+    window.onload = updateSignupButton;
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,117 @@
+/* ===============================
+   🔹 게시글 작성 전용 스타일
+   (post_view.css 스타일 기반)
+================================*/
+
+/* 전체 컨테이너 */
+.post-container {
+  display: block;
+  position: relative;
+  width: 1200px !important;
+  min-width: 1200px;
+  max-width: 1200px;
+  margin: 80px auto 60px auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  padding: 35px 40px;
+  box-sizing: border-box;
+}
+
+/* 제목 */
+.post-container h2 {
+  font-size: 26px;
+  color: #222;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+/* 폼 전체 구조 */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* 각 입력 필드 라벨 */
+label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+/* 입력 필드 공통 */
+input[type="text"],
+select,
+textarea {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fafafa;
+  transition: border 0.2s ease, background-color 0.2s ease;
+}
+
+input[type="text"]:focus,
+select:focus,
+textarea:focus {
+  border-color: #007bff;
+  background-color: #fff;
+  outline: none;
+}
+
+/* 텍스트 영역 (내용, 해결) */
+textarea {
+  min-height: 180px;
+  resize: vertical;
+  line-height: 1.6;
+  font-family: inherit;
+}
+
+/* 버튼 공통 */
+.btn_addel {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 20px;
+  align-self: flex-end;
+}
+
+/* 등록 버튼 */
+#btn_submit,
+.btn_addel {
+  background-color: #007bff;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+.btn_addel:hover {
+  background-color: #0056d2;
+  transform: translateY(-2px);
+}
+
+/* select 옵션 (카테고리) */
+select {
+  cursor: pointer;
+}
+
+/* 폼 필드 구분선 */
+form hr {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 10px 0;
+}
+
+/* 반응형 대비 (태블릿 이하) */
+@media (max-width: 1280px) {
+  .post-container {
+    width: 95%;
+    min-width: auto;
+  }
+}
+

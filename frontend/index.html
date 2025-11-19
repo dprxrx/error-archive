@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Archive - 로그인</title>
+
+  <!-- CSS 분리 구조 -->
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/form.css">
+</head>
+
+<body>
+  <canvas id="snowCanvas"></canvas>
+  <div class="main-container">
+    <div class="logo-box">
+      <img src="assets/logo_img_xmas.png" alt="Error Archive Logo" class="logo">
+    </div>
+
+    <div class="card-box">
+      <form id="login-form">
+        <label for="login">login</label>
+        <input type="text" id="login" name="login" placeholder="아이디 입력">
+
+        <label for="pw">pw</label>
+        <input type="password" id="pw" name="pw" placeholder="비밀번호 입력">
+
+        <div id="error-container"></div>
+        <button type="submit" class="btn-primary">로그인</button>
+      </form>
+
+      <button class="login-btn kakao-btn" id="kakao-login">
+        <img src="assets/kakao.png" alt="kakao_icon">
+        Continue with Kakao
+      </button>
+
+      <button class="login-btn naver-btn" id="naver-login">
+        <img src="assets/naver.png" alt="naver_icon">
+        Continue with Naver
+      </button>
+
+      <div class="sub-links">
+        <a href="signup">회원가입</a> |
+        <a href="find">ID/PW 찾기</a>
+      </div>
+    </div>
+  </div>
+
+
+  <!--눈내리는 코드-->
+  <script>
+  const canvas = document.getElementById('snowCanvas');
+  const ctx = canvas.getContext('2d');
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let snowflakes = [];
+
+  function createSnowflake() {
+    const size = Math.random() * 2 + 1;
+    return {
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      speed: Math.random() * 0.5 + 0.5,
+      radius: size,
+      drift: (Math.random() - 0.5) * 1
+    };
+  }
+
+  function updateSnow() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    snowflakes.forEach(flake => {
+      flake.y += flake.speed;
+      flake.x += flake.drift;
+
+      if (flake.y > canvas.height) {
+        Object.assign(flake, createSnowflake());
+        flake.y = 0;
+      }
+
+      ctx.beginPath();
+      ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fill();
+    });
+
+    requestAnimationFrame(updateSnow);
+  }
+
+  function initSnow() {
+    snowflakes = Array.from({ length: 200 }, createSnowflake);
+    updateSnow();
+  }
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initSnow();
+  });
+
+  initSnow();
+  </script>
+
+
+
+  <script>
+    const form = document.getElementById("login-form");
+    const loginInput = document.getElementById("login");
+    const pwInput = document.getElementById("pw");
+    const errorContainer = document.getElementById("error-container");
+    const loginBtn = document.querySelector(".btn-primary");
+
+    // ✅ 입력 상태에 따라 버튼 스타일 변경
+    function updateLoginButton() {
+      if (loginInput.value.trim() && pwInput.value.trim()) {
+        loginBtn.style.opacity = "1";
+        loginBtn.style.cursor = "pointer";
+      } else {
+        loginBtn.style.opacity = "0.6";
+        loginBtn.style.cursor = "default";
+      }
+    }
+
+    loginInput.addEventListener("input", updateLoginButton);
+    pwInput.addEventListener("input", updateLoginButton);
+    window.onload = updateLoginButton;
+
+    // ✅ 일반 로그인 요청
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      errorContainer.innerHTML = "";
+
+      const login = loginInput.value.trim();
+      const pw = pwInput.value.trim();
+
+      if (!login && !pw) return showError("아이디와 비밀번호를 입력해주세요.");
+      if (!login) return showError("아이디를 입력해주세요.");
+      if (!pw) return showError("비밀번호를 입력해주세요.");
+
+      try {
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ login, pw }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem("user", JSON.stringify({
+            userId: login,
+            name: data.user.name,
+            role: data.user.role
+          }));
+          alert(`${data.user?.name || login}님 환영합니다!`);
+          window.location.href = "list";
+        } else {
+          showError(data.message || "아이디 또는 비밀번호가 올바르지 않습니다.");
+        }
+      } catch (err) {
+        console.error("🚨 서버 연결 오류:", err);
+        showError("서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      }
+    });
+
+    // ✅ 카카오 로그인 버튼 클릭 시
+    document.getElementById("kakao-login").addEventListener("click", () => {
+      window.location.href = "/auth/kakao";
+    });
+
+    // ✅ 네이버 로그인 버튼 클릭 시
+    document.getElementById("naver-login").addEventListener("click", () => {
+      window.location.href = "/auth/naver";
+    });
+
+    // ✅ 에러 표시 함수
+    function showError(msg) {
+      const div = document.createElement("div");
+      div.className = "error-msg";
+      div.textContent = msg;
+      errorContainer.innerHTML = "";
+      errorContainer.appendChild(div);
+      makeButtonDim();
+    }
+
+    function makeButtonDim() {
+      loginBtn.style.opacity = "0.6";
+      loginBtn.style.cursor = "default";
+    }
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Error Archive - 글 상세보기</title>
+
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/post_view.css" />
+</head>
+
+<body>
+  <header class="nav-bar">
+    <div class="nav-left">
+      <img src="assets/logo_img.png" alt="Error Archive Logo" class="nav-logo" />
+      <a href="list" class="nav-list">Error List</a>
+    </div>
+    <div class="nav-right">
+      <div class="dropdown" id="dropdown-area">
+        <button class="nav-link" id="mypage-btn">MY Page ▾</button>
+        <div class="dropdown-content" id="mypage-menu">
+          <a href="list?mode=my">📝 내가 쓴 글</a>
+        </div>
+      </div>
+      <a href="index" class="nav-logout">Log out</a>
+    </div>
+  </header>
+
+  <main class="post-container">
+    <div class="post-header">
+      <h2 id="post-title">로딩 중...</h2>
+      <div class="post-meta">
+        <span id="post-author"></span>
+        <span id="post-category"></span>
+        <span id="post-date"></span>
+      </div>
+    </div>
+
+    <div class="post-content">
+      <div class="post-section">
+        <h4>🧩 오류의 내용</h4>
+        <div id="error-content"></div>
+      </div>
+      <div class="post-section">
+        <h4>💡 오류의 해결</h4>
+        <div id="solution-content"></div>
+      </div>
+    </div>
+
+    <div class="vote-section" id="vote-section">
+      <button class="vote-btn upvote" id="btn-up">👍 추천 <span id="up-count">0</span></button>
+      <button class="vote-btn downvote" id="btn-down">👎 비추천 <span id="down-count">0</span></button>
+    </div>
+
+    <div class="action-btns" id="action-btns" style="display:none;"></div>
+
+    <div class="comment-box" id="comment-box">
+      <input type="text" id="commentInput" placeholder="댓글 작성..." />
+      <button id="btn-comment">등록</button>
+    </div>
+
+    <div class="comment-list" id="commentList"></div>
+  </main>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const params = new URLSearchParams(window.location.search);
+    const postId = params.get("id");
+
+    if (!userData) {
+      alert("로그인이 필요합니다.");
+      window.location.href = "index";
+      return;
+    }
+
+    // ✅ 네비게이션 이름 표시
+    const navRight = document.querySelector(".nav-right");
+    const nameTag = document.createElement("span");
+    nameTag.textContent = `${userData.name} 님`;
+    nameTag.style.marginRight = "10px";
+    navRight.prepend(nameTag);
+
+    // ✅ 드롭다운 제어
+    const btn = document.getElementById("mypage-btn");
+    const menu = document.getElementById("mypage-menu");
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      menu.classList.toggle("show");
+    });
+    document.addEventListener("click", e => {
+      if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove("show");
+    });
+
+    try {
+      const res = await fetch(`/api/post/${postId}`);
+      const post = await res.json();
+
+      // ✅ 카테고리 매핑
+      const categoryMap = {
+        1: "🐧 Linux",
+        2: "💾 Database",
+        3: "🐍 Python",
+        4: "🐳 Docker",
+        5: "☸️ Kubernetes",
+        6: "☁️ AWS",
+      };
+
+      // ✅ 게시글 내용 표시
+      document.getElementById("post-title").textContent = post.title;
+      document.getElementById("post-author").textContent = `작성자: ${post.author}`;
+      document.getElementById("post-category").textContent = `카테고리: ${categoryMap[post.category] || "미분류"}`;
+      document.getElementById("post-date").textContent = `작성일: ${new Date(post.createdAt).toLocaleDateString()}`;
+      document.getElementById("error-content").innerHTML = post.errorContent || "(내용 없음)";
+      document.getElementById("solution-content").innerHTML = post.solutionContent || "(내용 없음)";
+      document.getElementById("up-count").textContent = post.likes || 0;
+      document.getElementById("down-count").textContent = post.dislikes || 0;
+
+      // ✅ 댓글 표시
+      const list = document.getElementById("commentList");
+      list.innerHTML = "";
+      if (post.comments?.length) {
+        post.comments.forEach(c => {
+          const div = document.createElement("div");
+          div.classList.add("comment-item");
+          div.innerHTML = `<strong>${c.authorId}</strong><p>${c.content}</p>`;
+          list.appendChild(div);
+        });
+      } else list.innerHTML = "<p>아직 댓글이 없습니다.</p>";
+
+      const role = userData.role;
+      const voteUp = document.getElementById("btn-up");
+      const voteDown = document.getElementById("btn-down");
+      const actionArea = document.getElementById("action-btns");
+
+      // ✅ 관리자(admin)
+      if (role === "admin") {
+        document.getElementById("dropdown-area").style.display = "none";
+        document.getElementById("comment-box").style.display = "none";
+        document.getElementById("commentList").style.display = "none";
+        document.getElementById("vote-section").style.display = "none";
+
+        actionArea.style.display = "block";
+        actionArea.innerHTML = `
+          <button id="btn_ad" class="btn_addel" onclick="approvePost('${postId}')">승인</button>
+          <button id="btn_del" class="btn_addel" onclick="deletePost('${postId}')">삭제</button>
+        `;
+      }
+
+      // ✅ 작성자 본인
+      else if (post.author === userData.userId) {
+        // 추천 비활성화
+        voteUp.disabled = true;
+        voteDown.disabled = true;
+
+        // 댓글 비활성화
+        document.getElementById("comment-box").style.display = "none";
+
+        // 수정 / 삭제 버튼 표시
+        actionArea.style.display = "block";
+        actionArea.innerHTML = `
+          <button id="btn_ad" class="btn_addel" onclick="editPost('${postId}')">수정</button>
+          <button id="btn_del" class="btn_addel" onclick="deletePost('${postId}')">삭제</button>
+        `;
+      }
+
+      // ✅ 일반 사용자
+      else {
+        actionArea.style.display = "none";
+      }
+
+      // ✅ 추천 기능
+      voteUp.addEventListener("click", () => sendVote(postId, "up"));
+      voteDown.addEventListener("click", () => sendVote(postId, "down"));
+
+      // ✅ 댓글 추가
+      document.getElementById("btn-comment").addEventListener("click", async () => {
+        const input = document.getElementById("commentInput");
+        const text = input.value.trim();
+        if (!text) return alert("댓글을 입력하세요.");
+
+        const res = await fetch(`/api/posts/${postId}/comment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ authorId: userData.userId, content: text })
+        });
+        const data = await res.json();
+        if (data.success) location.reload();
+        else alert("댓글 등록 실패");
+      });
+
+    } catch (err) {
+      console.error("❌ 게시글 불러오기 실패:", err);
+    }
+  });
+
+  // ✅ 수정 페이지로 이동
+  function editPost(postId) {
+    window.location.href = `post_write?id=${postId}&mode=edit`;
+  }
+
+  async function sendVote(id, type) {
+    const res = await fetch(`/api/post/${id}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById("up-count").textContent = data.likes;
+      document.getElementById("down-count").textContent = data.dislikes;
+    }
+  }
+
+  async function approvePost(id) {
+    const res = await fetch(`/api/post/${id}/approve`, { method: "POST" });
+    const data = await res.json();
+    alert(data.message);
+    window.location.href = "list";
+  }
+
+  async function deletePost(id) {
+    if (!confirm("정말 삭제하시겠습니까?")) return;
+    const res = await fetch(`/api/post/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    alert(data.message);
+    window.location.href = "list";
+  }
+  </script>
+</body>
+</html>
+
+

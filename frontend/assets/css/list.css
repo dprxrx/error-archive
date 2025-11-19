@@ -1,0 +1,251 @@
+/* ===============================
+   🔹 게시글 목록 전용 스타일
+================================*/
+
+/* 리스트 컨테이너 (게시판 본문 박스) */
+.list-container {
+  margin-top: 50px;           /* 네비 아래 여백 */
+  margin-bottom: 60px;        /* 하단 공백 */
+  width: 90%;
+  max-width: 1300px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  padding: 35px 40px;
+  min-height: calc(100vh - 280px); /* 네비+여백 제외 */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 헤더 영역 */
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.category-box select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* 글쓰기 버튼 */
+.btn-write {
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 10px 22px;
+  transition: 0.25s ease;
+}
+
+.btn-write:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+/* 테이블 구조 */
+.post-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.post-table th, 
+.post-table td {
+  text-align: left;
+  padding: 18px 15px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.post-table th {
+  color: #444;
+  font-size: 16px;
+}
+
+.post-table td a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.post-table td a:hover {
+  color: #0056b3;
+}
+
+/* ✅ 열 정렬 (제목 / 카테고리 / ID / 작성날짜 비율 조정) */
+.post-table th:nth-child(1),
+.post-table td:nth-child(1) {
+  width: 45%; /* 제목 */
+}
+
+.post-table th:nth-child(2),
+.post-table td:nth-child(2) {
+  width: 20%; /* 카테고리 */
+  text-align: center;
+}
+
+.post-table th:nth-child(3),
+.post-table td:nth-child(3) {
+  width: 20%; /* ID */
+  text-align: center;
+}
+
+.post-table th:nth-child(4),
+.post-table td:nth-child(4) {
+  width: 15%; /* 작성날짜 */
+  text-align: right;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 35px;
+  padding-bottom: 60px;
+  flex-wrap: wrap;
+}
+
+.pagination a {
+  text-decoration: none;
+  color: #007bff;
+  border: 1px solid #007bff;
+  border-radius: 6px;
+  padding: 8px 14px;
+  transition: 0.2s;
+  font-weight: 500;
+}
+
+.pagination a:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.pagination a.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination a.prev,
+.pagination a.next {
+  font-weight: bold;
+}
+
+/* 중앙 정렬 보장 */
+main.list-container {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ===============================
+   🔹 검색 영역 스타일 (추가)
+================================*/
+
+/* 검색 전체 영역 */
+.search-section {
+  margin-top: 30px;
+  text-align: center;
+}
+
+/* 검색창 내부 정렬 */
+.search-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+/* 검색 입력창 */
+.search-box input[type="text"] {
+  width: 250px;
+  padding: 9px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.search-box input[type="text"]:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
+}
+
+/* 검색 필드 선택(select) */
+.search-box select {
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* 검색 버튼 */
+.btn-search {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.btn-search:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+/* 초기화 버튼 */
+.btn-reset {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.btn-reset:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+/* 모바일 대응 */
+@media (max-width: 600px) {
+  .search-box {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .search-box input[type="text"],
+  .search-box select,
+  .btn-search,
+  .btn-reset {
+    width: 100%;
+  }
+}
