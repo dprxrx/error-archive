@@ -66,7 +66,7 @@
   <div id="winter-event-banner" style="display: none;">
     <div class="event-banner-content">
       <span>🎄 겨울 맞이 이벤트 진행 중! 룰렛 돌리고 선물 받자! 🎁</span>
-      <a href="roulette" class="event-banner-link">참여하기 →</a>
+      <a href="roulette.html" class="event-banner-link">참여하기 →</a>
       <button class="event-banner-close" onclick="closeEventBanner()">✕</button>
     </div>
   </div>
@@ -78,6 +78,17 @@
       <a href="list" class="nav-list">Error List</a>
     </div>
     <div class="nav-right">
+      <button id="theme-toggle" onclick="toggleTheme()" style="
+        background: rgba(255,255,255,0.9);
+        border: 2px solid #667eea;
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: bold;
+        color: #667eea;
+        margin-right: 10px;
+        font-size: 14px;
+      ">🍂 가을 테마</button>
       <div class="dropdown" id="mypage-dropdown">
         <button class="nav-link" id="mypage-btn">MY Page ▾</button>
         <div class="dropdown-content" id="mypage-menu">
@@ -184,8 +195,14 @@
     nameTag.style.marginRight = "10px";
     navRight.prepend(nameTag);
 
-    // ✅ 겨울 맞이 이벤트 배너 표시 (테마가 겨울일 때만)
+    // ✅ 테마 토글 버튼 초기화
     const currentTheme = localStorage.getItem('theme') || 'autumn';
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+      themeToggle.textContent = currentTheme === 'winter' ? '❄️ 겨울 테마' : '🍂 가을 테마';
+    }
+    
+    // ✅ 겨울 맞이 이벤트 배너 표시 (테마가 겨울일 때만)
     const bannerClosed = localStorage.getItem('eventBannerClosed') === 'true';
     
     if (currentTheme === 'winter' && !bannerClosed) {
@@ -356,6 +373,32 @@
       banner.style.display = 'none';
       localStorage.setItem('eventBannerClosed', 'true');
     }
+  }
+
+  // 테마 전환 함수
+  function toggleTheme() {
+    const currentTheme = localStorage.getItem('theme') || 'autumn';
+    const newTheme = currentTheme === 'autumn' ? 'winter' : 'autumn';
+    localStorage.setItem('theme', newTheme);
+    
+    // 테마 토글 버튼 업데이트
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+      themeToggle.textContent = newTheme === 'winter' ? '❄️ 겨울 테마' : '🍂 가을 테마';
+    }
+    
+    // 배너 표시/숨김 업데이트
+    const banner = document.getElementById('winter-event-banner');
+    const bannerClosed = localStorage.getItem('eventBannerClosed') === 'true';
+    
+    if (newTheme === 'winter' && !bannerClosed && banner) {
+      banner.style.display = 'block';
+    } else if (banner) {
+      banner.style.display = 'none';
+    }
+    
+    // 페이지 새로고침으로 테마 적용
+    window.location.reload();
   }
 
   // ✅ 뒤로가기 방지
