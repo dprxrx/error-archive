@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: frontend-pipelinerun-
+  namespace: default
+spec:
+  pipelineRef:
+    name: frontend-pipeline
+  params:
+  - name: git-url
+    value: https://github.com/dprxrx/error-archive.git
+  - name: git-revision
+    value: main
+  - name: docker-image
+    value: 192.168.0.169:443/project/error-archive-frontend:latest
+  - name: registry-url
+    value: 192.168.0.169:443
+  - name: registry-username
+    value: admin
+  - name: registry-password
+    value: Harbor12345
+  workspaces:
+  - name: shared-workspace
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+

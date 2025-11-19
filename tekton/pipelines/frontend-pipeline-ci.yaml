@@ -1,0 +1,71 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: frontend-pipeline-ci
+  namespace: default
+spec:
+  description: |
+    Frontend CI Pipeline - 이미지 빌드 및 Harbor 푸시만 수행
+    배포는 ArgoCD가 담당합니다.
+  params:
+  - name: git-url
+    description: Git repository URL
+    default: https://github.com/dprxrx/error-archive.git
+    type: string
+  - name: git-revision
+    description: Git branch or tag
+    default: main
+    type: string
+  - name: docker-image
+    description: Docker image name (e.g., repo/frontend:tag)
+    default: 192.168.0.169:443/project/error-archive-frontend:latest
+    type: string
+  - name: registry-url
+    description: Docker registry URL
+    default: 192.168.0.169:443
+    type: string
+  - name: registry-username
+    description: Docker registry username
+    default: admin
+    type: string
+  - name: registry-password
+    description: Docker registry password
+    default: Harbor12345
+    type: string
+  workspaces:
+  - name: shared-workspace
+    description: Shared workspace for all tasks
+  tasks:
+  - name: git-clone
+    taskRef:
+      name: git-clone
+    params:
+    - name: git-url
+      value: $(params.git-url)
+    - name: git-revision
+      value: $(params.git-revision)
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: docker-build-and-push
+    runAfter:
+    - git-clone
+    taskRef:
+      name: docker-build-and-push
+    params:
+    - name: image
+      value: $(params.docker-image)
+    - name: registry-url
+      value: $(params.registry-url)
+    - name: registry-username
+      value: $(params.registry-username)
+    - name: registry-password
+      value: $(params.registry-password)
+    - name: dockerfile-path
+      value: "Dockerfile"
+    - name: build-context
+      value: "frontend"
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+

@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: error-archive
+  labels:
+    app: backend
+    version: "1.1"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        version: "1.1"
+    spec:
+      containers:
+      - name: backend
+        image: 192.168.0.169:443/project/error-archive-backend:1.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: JWT_SECRET
+          value: k8spass#jwt
+        - name: PUBLIC_IP
+          value: http://error-archive.local
+        - name: KAKAO_CLIENT_ID
+          value: 75218448ddb01cb67aec079a8dbd61ae
+        - name: KAKAO_CLIENT_SECRET
+          value: jqAC1gVOlf7cBhb500rReivNfJ3o5F59
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: error-archive
+  labels:
+    app: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: backend
+

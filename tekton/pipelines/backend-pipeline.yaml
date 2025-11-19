@@ -1,0 +1,87 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: backend-pipeline
+  namespace: default
+spec:
+  params:
+  - name: git-url
+    description: Git repository URL
+    default: https://github.com/dprxrx/error-archive.git
+    type: string
+  - name: git-revision
+    description: Git branch or tag
+    default: main
+    type: string
+  - name: docker-image
+    description: Docker image name (e.g., repo/backend:tag)
+    default: 192.168.0.169:443/project/error-archive-backend:latest
+    type: string
+  - name: registry-url
+    description: Docker registry URL
+    default: 192.168.0.169:443
+    type: string
+  - name: registry-username
+    description: Docker registry username
+    default: admin
+    type: string
+  - name: registry-password
+    description: Docker registry password
+    default: Harbor12345
+    type: string
+  workspaces:
+  - name: shared-workspace
+    description: Shared workspace for all tasks
+  tasks:
+  - name: git-clone
+    taskRef:
+      name: git-clone
+    params:
+    - name: git-url
+      value: $(params.git-url)
+    - name: git-revision
+      value: $(params.git-revision)
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: docker-build-and-push
+    runAfter:
+    - git-clone
+    taskRef:
+      name: docker-build-and-push
+    params:
+    - name: image
+      value: $(params.docker-image)
+    - name: registry-url
+      value: $(params.registry-url)
+    - name: registry-username
+      value: $(params.registry-username)
+    - name: registry-password
+      value: $(params.registry-password)
+    - name: dockerfile-path
+      value: "Dockerfile"
+    - name: build-context
+      value: "backend"
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: kubernetes-deploy
+    runAfter:
+    - docker-build-and-push
+    taskRef:
+      name: kubernetes-deploy
+    params:
+    - name: manifest
+      value: tekton/manifests/backend-deployment.yaml
+    - name: image
+      value: $(params.docker-image)
+    - name: deployment-name
+      value: backend-deployment
+    - name: container-name
+      value: backend
+    - name: namespace
+      value: error-archive
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+

@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: kubernetes-deploy
+  namespace: default
+spec:
+  params:
+  - name: manifest
+    description: Path to the Kubernetes manifest file
+    type: string
+  - name: image
+    description: Docker image name to set in Deployment
+    type: string
+  - name: deployment-name
+    description: Name of the deployment to update
+    type: string
+  - name: container-name
+    description: Name of the container in deployment
+    type: string
+  - name: namespace
+    description: Kubernetes namespace
+    default: error-archive
+    type: string
+  workspaces:
+  - name: source
+    description: The workspace containing the Kubernetes manifests
+  steps:
+  - name: apply
+    image: bitnami/kubectl
+    script: |
+      #!/bin/sh
+      cd $(workspaces.source.path)
+      echo ">>> Applying manifest: $(params.manifest)"
+      kubectl apply -f $(params.manifest) -n $(params.namespace)
+      echo ">>> Updating image for deployment $(params.deployment-name)"
+      kubectl set image deployment/$(params.deployment-name) \
+        $(params.container-name)=$(params.image) \
+        -n $(params.namespace)
+      echo ">>> Waiting for rollout to complete..."
+      kubectl rollout status deployment/$(params.deployment-name) -n $(params.namespace) --timeout=300s
+

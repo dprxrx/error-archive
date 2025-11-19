@@ -1,0 +1,32 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: git-clone
+  namespace: default
+spec:
+  params:
+  - name: git-url
+    description: Git repository URL
+    type: string
+  - name: git-revision
+    description: Git branch or tag
+    default: main
+    type: string
+  workspaces:
+  - name: source
+    description: The git repository will be cloned onto the volume backing this workspace
+  steps:
+  - name: cleanup
+    image: alpine
+    script: |
+      #!/bin/sh
+      echo "Cleaning up existing files in workspace"
+      chmod -R 777 $(workspaces.source.path) || true
+      rm -rf $(workspaces.source.path) || true
+      mkdir -p $(workspaces.source.path)
+  - name: clone
+    image: alpine/git
+    script: |
+      #!/bin/sh
+      git clone -b $(params.git-revision) $(params.git-url) $(workspaces.source.path)
+

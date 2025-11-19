@@ -1,0 +1,78 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: docker-build-and-push
+  namespace: default
+spec:
+  params:
+  - name: image
+    description: Docker image name (e.g., repo/name:tag)
+    type: string
+  - name: registry-url
+    description: Docker registry URL
+    default: 192.168.0.169:443
+    type: string
+  - name: registry-username
+    description: Docker registry username
+    default: admin
+    type: string
+  - name: registry-password
+    description: Docker registry password
+    default: Harbor12345
+    type: string
+  - name: dockerfile-path
+    description: Path to Dockerfile relative to workspace root
+    default: "."
+    type: string
+  - name: build-context
+    description: Build context path relative to workspace root
+    default: "."
+    type: string
+  workspaces:
+  - name: source
+    description: The workspace containing the source code
+  volumes:
+  - name: docker-socket
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket
+  steps:
+  - name: build
+    image: docker:19.03.12-dind
+    script: |
+      #!/bin/sh
+      echo ">>> Building Docker image from $(params.build-context)"
+      echo ">>> Dockerfile path: $(params.dockerfile-path)"
+      docker version || echo "docker daemon 연결 실패"
+      
+      cd $(workspaces.source.path)
+      BUILD_CONTEXT=$(params.build-context)
+      DOCKERFILE=$(params.dockerfile-path)
+      
+      # Dockerfile 경로가 상대 경로인 경우 build-context 기준으로 조정
+      if [ "$DOCKERFILE" != "." ] && [ "$DOCKERFILE" != "./Dockerfile" ]; then
+        DOCKERFILE="$BUILD_CONTEXT/$DOCKERFILE"
+      fi
+      
+      docker build -t $(params.image) -f "$DOCKERFILE" "$BUILD_CONTEXT"
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /var/run/docker.sock
+      name: docker-socket
+  - name: push
+    image: docker:19.03.12-dind
+    script: |
+      #!/bin/sh
+      docker version || echo "docker daemon 연결 실패"
+      echo ">>> Login & push to $(params.registry-url)"
+      echo "$(params.registry-password)" | docker login $(params.registry-url) \
+        -u $(params.registry-username) \
+        --password-stdin
+      docker push $(params.image)
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /var/run/docker.sock
+      name: docker-socket
+

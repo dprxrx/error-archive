@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: error-archive
+  labels:
+    app: frontend
+    version: "1.1"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: "1.1"
+    spec:
+      containers:
+      - name: nginx
+        image: 192.168.0.169:443/project/error-archive-frontend:1.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          limits:
+            cpu: 150m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        volumeMounts:
+        - mountPath: /etc/nginx/conf.d/errorarchive.conf
+          name: nginx-conf-volume
+          subPath: errorarchive.conf
+      securityContext:
+        runAsUser: 0
+      volumes:
+      - configMap:
+          items:
+          - key: errorarchive.conf
+            path: errorarchive.conf
+          name: nginx-proxy-config
+        name: nginx-conf-volume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: error-archive
+  labels:
+    app: frontend
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  selector:
+    app: frontend
+
