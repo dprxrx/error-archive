@@ -191,6 +191,259 @@
       loginBtn.style.cursor = "default";
     }
   </script>
+
+  <!-- 챗봇 UI -->
+  <button id="chatbot-toggle">💬</button>
+  
+  <div id="chatbot-container" style="display: none;">
+    <div id="chatbot-header">
+      <span>💬 챗봇 도우미</span>
+      <button id="chatbot-close">✕</button>
+    </div>
+    <div id="chatbot-messages"></div>
+    <div id="chatbot-input-container">
+      <input type="text" id="chatbot-input" placeholder="메시지를 입력하세요...">
+      <button id="chatbot-send">전송</button>
+    </div>
+  </div>
+
+  <style>
+  #chatbot-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    z-index: 10000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  #chatbot-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #chatbot-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+  }
+
+  #chatbot-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f5f5f5;
+  }
+
+  .message {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .message.user {
+    align-items: flex-end;
+  }
+
+  .message.bot {
+    align-items: flex-start;
+  }
+
+  .message-bubble {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    word-wrap: break-word;
+  }
+
+  .message.user .message-bubble {
+    background: #667eea;
+    color: white;
+  }
+
+  .message.bot .message-bubble {
+    background: white;
+    color: #333;
+    border: 1px solid #e0e0e0;
+  }
+
+  #chatbot-input-container {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #e0e0e0;
+    background: white;
+    border-radius: 0 0 10px 10px;
+  }
+
+  #chatbot-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    outline: none;
+    margin-right: 10px;
+  }
+
+  #chatbot-send {
+    padding: 10px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+
+  #chatbot-send:hover {
+    background: #5568d3;
+  }
+
+  #chatbot-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+  }
+
+  #chatbot-toggle:hover {
+    transform: scale(1.1);
+  }
+  </style>
+
+  <script>
+  // 챗봇 로직
+  (function() {
+    const chatbotContainer = document.getElementById('chatbot-container');
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+    const chatbotClose = document.getElementById('chatbot-close');
+    const chatbotMessages = document.getElementById('chatbot-messages');
+    const chatbotInput = document.getElementById('chatbot-input');
+    const chatbotSend = document.getElementById('chatbot-send');
+
+    // 챗봇 토글
+    chatbotToggle.addEventListener('click', () => {
+      chatbotContainer.style.display = chatbotContainer.style.display === 'none' ? 'flex' : 'none';
+      chatbotToggle.style.display = chatbotContainer.style.display === 'none' ? 'flex' : 'none';
+    });
+
+    chatbotClose.addEventListener('click', () => {
+      chatbotContainer.style.display = 'none';
+      chatbotToggle.style.display = 'flex';
+    });
+
+    // 메시지 추가
+    function addMessage(text, isUser) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+      
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+      bubble.textContent = text;
+      
+      messageDiv.appendChild(bubble);
+      chatbotMessages.appendChild(messageDiv);
+      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    // 챗봇 응답 생성
+    function getBotResponse(userMessage) {
+      const message = userMessage.toLowerCase().trim();
+      
+      // 인사
+      if (message.includes('안녕') || message.includes('hello') || message.includes('hi')) {
+        return '안녕하세요! Error Archive 챗봇입니다. 무엇을 도와드릴까요?';
+      }
+      
+      // 로그인 관련
+      if (message.includes('로그인') || message.includes('login')) {
+        return '로그인 페이지에서 아이디와 비밀번호를 입력하시면 됩니다. 카카오나 네이버 계정으로도 로그인할 수 있어요!';
+      }
+      
+      // 회원가입
+      if (message.includes('회원가입') || message.includes('가입') || message.includes('signup')) {
+        return '회원가입은 상단의 "회원가입" 링크를 클릭하시면 됩니다.';
+      }
+      
+      // 비밀번호 찾기
+      if (message.includes('비밀번호') || message.includes('password') || message.includes('찾기')) {
+        return '비밀번호를 찾으시려면 상단의 "ID/PW 찾기" 링크를 이용해주세요.';
+      }
+      
+      // 도움말
+      if (message.includes('도움') || message.includes('help') || message.includes('도와')) {
+        return '다음과 같은 질문에 답변할 수 있어요:\n- 로그인 방법\n- 회원가입\n- 비밀번호 찾기\n- 서비스 소개';
+      }
+      
+      // 서비스 소개
+      if (message.includes('서비스') || message.includes('소개') || message.includes('뭐') || message.includes('what')) {
+        return 'Error Archive는 에러 로그를 관리하고 분석하는 서비스입니다. 개발자들이 에러를 체계적으로 관리할 수 있도록 도와드려요!';
+      }
+      
+      // 기본 응답
+      const responses = [
+        '죄송해요, 그 질문에 대해 정확히 답변드리기 어려워요. 다른 질문을 해주시겠어요?',
+        '좀 더 구체적으로 질문해주시면 도와드릴 수 있어요!',
+        '로그인, 회원가입, 비밀번호 찾기 등에 대해 물어보실 수 있어요.',
+      ];
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    // 메시지 전송
+    function sendMessage() {
+      const message = chatbotInput.value.trim();
+      if (!message) return;
+      
+      addMessage(message, true);
+      chatbotInput.value = '';
+      
+      // 챗봇 응답 (약간의 지연)
+      setTimeout(() => {
+        const response = getBotResponse(message);
+        addMessage(response, false);
+      }, 500);
+    }
+
+    chatbotSend.addEventListener('click', sendMessage);
+    chatbotInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    // 초기 메시지
+    setTimeout(() => {
+      addMessage('안녕하세요! Error Archive 챗봇입니다. 무엇을 도와드릴까요?', false);
+    }, 500);
+  })();
+  </script>
 </body>
 </html>
 
