@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>겨울 맞이 이벤트 - 룰렛</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .roulette-container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+
+    .roulette-wheel {
+      width: 300px;
+      height: 300px;
+      margin: 30px auto;
+      position: relative;
+      border-radius: 50%;
+      border: 10px solid #667eea;
+      overflow: hidden;
+      transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+    }
+
+    .roulette-wheel.spinning {
+      pointer-events: none;
+    }
+
+    .roulette-segment {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      transform-origin: 100% 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 16px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .segment-0 { background: #ff6b6b; transform: rotate(0deg); }
+    .segment-1 { background: #4ecdc4; transform: rotate(72deg); }
+    .segment-2 { background: #ffe66d; transform: rotate(144deg); }
+    .segment-3 { background: #95e1d3; transform: rotate(216deg); }
+    .segment-4 { background: #f38181; transform: rotate(288deg); }
+
+    .roulette-pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 30px solid #667eea;
+      z-index: 10;
+    }
+
+    .spin-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 18px;
+      border-radius: 30px;
+      cursor: pointer;
+      margin-top: 20px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+
+    .spin-button:hover:not(:disabled) {
+      transform: scale(1.05);
+    }
+
+    .spin-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f5f5f5;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .result.show {
+      display: block;
+      animation: fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-text {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .back-button {
+      margin-top: 20px;
+      color: #667eea;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .history {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 10px;
+      text-align: left;
+    }
+
+    .history-item {
+      padding: 10px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="roulette-container">
+    <h1>🎄 겨울 맞이 이벤트 룰렛 🎄</h1>
+    
+    <div class="roulette-wheel" id="roulette-wheel">
+      <div class="roulette-pointer"></div>
+      <div class="roulette-segment segment-0">꽝</div>
+      <div class="roulette-segment segment-1">피자</div>
+      <div class="roulette-segment segment-2">치킨</div>
+      <div class="roulette-segment segment-3">삼겹살</div>
+      <div class="roulette-segment segment-4">소고기</div>
+    </div>
+
+    <button class="spin-button" id="spin-button" onclick="spinRoulette()">룰렛 돌리기</button>
+
+    <div class="result" id="result">
+      <div class="result-text" id="result-text"></div>
+      <p>축하합니다! 🎉</p>
+    </div>
+
+    <div class="history" id="history" style="display: none;">
+      <h3>나의 룰렛 결과</h3>
+      <div id="history-list"></div>
+    </div>
+
+    <a href="list" class="back-button">← 목록으로 돌아가기</a>
+  </div>
+
+  <script>
+    const items = ['꽝', '피자', '치킨', '삼겹살', '소고기'];
+    const itemAngles = [0, 72, 144, 216, 288]; // 각 항목의 각도
+    let isSpinning = false;
+
+    // 룰렛 돌리기
+    async function spinRoulette() {
+      if (isSpinning) return;
+      
+      isSpinning = true;
+      const button = document.getElementById('spin-button');
+      const wheel = document.getElementById('roulette-wheel');
+      const result = document.getElementById('result');
+      const resultText = document.getElementById('result-text');
+      
+      button.disabled = true;
+      wheel.classList.add('spinning');
+      result.classList.remove('show');
+
+      // 랜덤 결과 선택
+      const randomIndex = Math.floor(Math.random() * items.length);
+      const selectedItem = items[randomIndex];
+      const baseAngle = itemAngles[randomIndex];
+      
+      // 룰렛 회전 (360도 * 5 + 랜덤 각도)
+      const spins = 5;
+      const randomOffset = Math.random() * 72 - 36; // -36 ~ 36도 랜덤
+      const finalAngle = spins * 360 + baseAngle + randomOffset;
+      
+      wheel.style.transform = `rotate(${finalAngle}deg)`;
+
+      // 회전 완료 후 결과 표시
+      setTimeout(async () => {
+        wheel.classList.remove('spinning');
+        resultText.textContent = selectedItem;
+        result.classList.add('show');
+        
+        // 결과 저장
+        await saveResult(selectedItem);
+        
+        // 히스토리 업데이트
+        await loadHistory();
+        
+        button.disabled = false;
+        isSpinning = false;
+      }, 4000);
+    }
+
+    // 결과 저장
+    async function saveResult(item) {
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+          alert('로그인이 필요합니다.');
+          window.location.href = '/';
+          return;
+        }
+
+        const response = await fetch('/api/roulette/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.userId,
+            result: item,
+            timestamp: new Date().toISOString()
+          })
+        });
+
+        if (!response.ok) {
+          console.error('결과 저장 실패');
+        }
+      } catch (error) {
+        console.error('결과 저장 오류:', error);
+      }
+    }
+
+    // 히스토리 로드
+    async function loadHistory() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) return;
+
+        const response = await fetch(`/api/roulette/history?userId=${user.userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          const historyList = document.getElementById('history-list');
+          const historyDiv = document.getElementById('history');
+          
+          if (data.history && data.history.length > 0) {
+            historyDiv.style.display = 'block';
+            historyList.innerHTML = data.history.map(item => `
+              <div class="history-item">
+                <strong>${item.result}</strong> - ${new Date(item.timestamp).toLocaleString('ko-KR')}
+              </div>
+            `).join('');
+          }
+        }
+      } catch (error) {
+        console.error('히스토리 로드 오류:', error);
+      }
+    }
+
+    // 페이지 로드 시 히스토리 불러오기
+    window.onload = () => {
+      loadHistory();
+    };
+  </script>
+</body>
+</html>
+

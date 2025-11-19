@@ -661,6 +661,64 @@ app.get("/api/chatbot/stats", async (req, res) => {
 });
 
 // ===============================
+// ✅ 룰렛 관련 스키마
+// ===============================
+const rouletteResultSchema = new mongoose.Schema({
+  userId: String,
+  result: String,
+  timestamp: { type: Date, default: Date.now }
+});
+
+const RouletteResult = mongoose.model("RouletteResult", rouletteResultSchema, "RouletteResults");
+
+// ===============================
+// ✅ 룰렛 API
+// ===============================
+
+// 룰렛 결과 저장
+app.post("/api/roulette/save", async (req, res) => {
+  try {
+    const { userId, result, timestamp } = req.body;
+    
+    if (!userId || !result) {
+      return res.status(400).json({ error: "userId와 result가 필요합니다." });
+    }
+
+    const rouletteResult = new RouletteResult({
+      userId,
+      result,
+      timestamp: timestamp || new Date()
+    });
+
+    await rouletteResult.save();
+    res.json({ success: true, result });
+  } catch (error) {
+    console.error("❌ 룰렛 결과 저장 오류:", error);
+    res.status(500).json({ error: "결과 저장 실패" });
+  }
+});
+
+// 룰렛 결과 히스토리 조회
+app.get("/api/roulette/history", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ error: "userId가 필요합니다." });
+    }
+
+    const history = await RouletteResult.find({ userId })
+      .sort({ timestamp: -1 })
+      .limit(20);
+
+    res.json({ history });
+  } catch (error) {
+    console.error("❌ 룰렛 히스토리 조회 오류:", error);
+    res.status(500).json({ error: "히스토리 조회 실패" });
+  }
+});
+
+// ===============================
 // ✅ 서버 실행
 // ===============================
 app.listen(3000, "0.0.0.0", () => {
