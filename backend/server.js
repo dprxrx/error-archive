@@ -513,6 +513,154 @@ app.get("/auth/naver/callback", async (req, res) => {
 });
 
 // ===============================
+// ✅ 챗봇 관련 스키마
+// ===============================
+const chatbotLogSchema = new mongoose.Schema({
+  question: String,
+  answer: String,
+  intent: String,
+  timestamp: { type: Date, default: Date.now },
+  userId: String
+});
+
+const ChatbotLog = mongoose.model("ChatbotLog", chatbotLogSchema, "ChatbotLogs");
+
+// ===============================
+// ✅ 챗봇 API
+// ===============================
+
+// 챗봇 응답 생성
+function getChatbotResponse(message, intent, history = []) {
+  const msg = message.toLowerCase().trim();
+  
+  // 컨텍스트 기반 응답 (대화 히스토리 활용)
+  if (history.length > 0) {
+    const lastMessage = history[history.length - 1];
+    if (lastMessage && lastMessage.text && lastMessage.text.includes('로그인')) {
+      if (msg.includes('카카오') || msg.includes('네이버')) {
+        return '네! 카카오나 네이버 계정으로 간편하게 로그인할 수 있어요. 로그인 페이지에서 해당 버튼을 클릭하시면 됩니다.';
+      }
+    }
+  }
+
+  // 의도별 응답
+  switch(intent) {
+    case 'greeting':
+      return '안녕하세요! Error Archive 챗봇입니다. 무엇을 도와드릴까요?';
+    
+    case 'login':
+      return '로그인 페이지에서 아이디와 비밀번호를 입력하시면 됩니다. 카카오나 네이버 계정으로도 로그인할 수 있어요!';
+    
+    case 'signup':
+      return '회원가입은 상단의 "회원가입" 링크를 클릭하시면 됩니다. 간단한 정보만 입력하시면 바로 가입할 수 있어요!';
+    
+    case 'password':
+      return '비밀번호를 찾으시려면 상단의 "ID/PW 찾기" 링크를 이용해주세요. 이메일로 비밀번호 재설정 링크를 보내드립니다.';
+    
+    case 'help':
+      return '다음과 같은 질문에 답변할 수 있어요:\n- 로그인 방법\n- 회원가입\n- 비밀번호 찾기\n- 서비스 소개\n- 에러 로그 관리 방법';
+    
+    case 'service':
+      return 'Error Archive는 에러 로그를 관리하고 분석하는 서비스입니다. 개발자들이 에러를 체계적으로 관리하고, 해결 방법을 공유할 수 있도록 도와드려요!';
+    
+    case 'error':
+      return '에러 로그를 관리하고 싶으시다면 로그인 후 게시판에서 에러를 등록하고 해결 방법을 공유할 수 있어요! 다른 개발자들의 도움도 받을 수 있습니다.';
+    
+    case 'thanks':
+      return '천만에요! 😊 다른 도움이 필요하시면 언제든지 말씀해주세요!';
+    
+    default:
+      // 키워드 기반 응답
+      if (msg.includes('에러') || msg.includes('오류')) {
+        return '에러 로그를 등록하거나 검색하고 싶으시다면 로그인 후 게시판을 이용해주세요!';
+      }
+      if (msg.includes('게시판') || msg.includes('글')) {
+        return '게시판에서는 에러 로그를 등록하고, 다른 개발자들의 해결 방법을 확인할 수 있어요. 로그인 후 이용 가능합니다.';
+      }
+      return '죄송해요, 그 질문에 대해 정확히 답변드리기 어려워요. 로그인, 회원가입, 비밀번호 찾기, 서비스 소개 등에 대해 물어보실 수 있어요.';
+  }
+}
+
+// 챗봇 메시지 처리 API
+app.post("/api/chatbot", async (req, res) => {
+  try {
+    const { message, intent, history } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: "메시지가 필요합니다." });
+    }
+
+    // 챗봇 응답 생성
+    const response = getChatbotResponse(message, intent, history);
+    
+    res.json({ response });
+  } catch (error) {
+    console.error("❌ 챗봇 API 오류:", error);
+    res.status(500).json({ error: "서버 오류가 발생했습니다." });
+  }
+});
+
+// 챗봇 대화 로그 저장 API
+app.post("/api/chatbot/logs", async (req, res) => {
+  try {
+    const { question, answer, timestamp } = req.body;
+    
+    // 사용자 정보 가져오기 (있는 경우)
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    let userId = null;
+    
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded.userId;
+      } catch (err) {
+        // 토큰이 없거나 유효하지 않아도 로그는 저장
+      }
+    }
+
+    const log = new ChatbotLog({
+      question,
+      answer,
+      timestamp: timestamp || new Date(),
+      userId: userId
+    });
+
+    await log.save();
+    res.json({ success: true });
+  } catch (error) {
+    console.error("❌ 챗봇 로그 저장 오류:", error);
+    res.status(500).json({ error: "로그 저장 실패" });
+  }
+});
+
+// 챗봇 통계 API (관리자용)
+app.get("/api/chatbot/stats", async (req, res) => {
+  try {
+    // 인기 질문 통계
+    const popularQuestions = await ChatbotLog.aggregate([
+      { $group: { _id: "$question", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // 의도별 통계
+    const intentStats = await ChatbotLog.aggregate([
+      { $group: { _id: "$intent", count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.json({
+      popularQuestions,
+      intentStats,
+      totalLogs: await ChatbotLog.countDocuments()
+    });
+  } catch (error) {
+    console.error("❌ 챗봇 통계 오류:", error);
+    res.status(500).json({ error: "통계 조회 실패" });
+  }
+});
+
+// ===============================
 // ✅ 서버 실행
 // ===============================
 app.listen(3000, "0.0.0.0", () => {

@@ -201,10 +201,12 @@
       <button id="chatbot-close">✕</button>
     </div>
     <div id="chatbot-messages"></div>
-    <div id="chatbot-input-container">
-      <input type="text" id="chatbot-input" placeholder="메시지를 입력하세요...">
-      <button id="chatbot-send">전송</button>
-    </div>
+  <div id="quick-replies"></div>
+  <div id="chatbot-input-container">
+    <button id="voice-input-btn" title="음성 입력">🎤</button>
+    <input type="text" id="chatbot-input" placeholder="메시지를 입력하세요...">
+    <button id="chatbot-send">전송</button>
+  </div>
   </div>
 
   <style>
@@ -336,10 +338,84 @@
   #chatbot-toggle:hover {
     transform: scale(1.1);
   }
+
+  /* 타이핑 애니메이션 */
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 10px;
+  }
+
+  .typing-indicator span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #999;
+    animation: typing 1.4s infinite;
+  }
+
+  .typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-10px); }
+  }
+
+  /* 빠른 응답 버튼 */
+  #quick-replies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    border-top: 1px solid #e0e0e0;
+    background: #f9f9f9;
+  }
+
+  .quick-reply-btn {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+
+  .quick-reply-btn:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+  }
+
+  /* 음성 입력 버튼 */
+  #voice-input-btn {
+    background: none;
+    border: none;
+    color: #667eea;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px 10px;
+  }
+
+  #voice-input-btn.recording {
+    color: #ff4444;
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
   </style>
 
   <script>
-  // 챗봇 로직
+  // 챗봇 로직 (고급 기능 포함)
   (function() {
     const chatbotContainer = document.getElementById('chatbot-container');
     const chatbotToggle = document.getElementById('chatbot-toggle');
@@ -347,6 +423,12 @@
     const chatbotMessages = document.getElementById('chatbot-messages');
     const chatbotInput = document.getElementById('chatbot-input');
     const chatbotSend = document.getElementById('chatbot-send');
+    const quickReplies = document.getElementById('quick-replies');
+    const voiceInputBtn = document.getElementById('voice-input-btn');
+
+    // 대화 히스토리 저장 (컨텍스트 기억)
+    let conversationHistory = [];
+    let isTyping = false;
 
     // 챗봇 토글
     chatbotToggle.addEventListener('click', () => {
@@ -359,76 +441,251 @@
       chatbotToggle.style.display = 'flex';
     });
 
-    // 메시지 추가
+    // 타이핑 인디케이터 추가
+    function addTypingIndicator() {
+      if (isTyping) return;
+      isTyping = true;
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message bot typing';
+      typingDiv.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+      chatbotMessages.appendChild(typingDiv);
+      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    // 타이핑 인디케이터 제거
+    function removeTypingIndicator() {
+      const typing = chatbotMessages.querySelector('.typing');
+      if (typing) typing.remove();
+      isTyping = false;
+    }
+
+    // 메시지 추가 (컨텍스트 기억 포함)
     function addMessage(text, isUser) {
+      // 대화 히스토리에 저장
+      conversationHistory.push({ 
+        text, 
+        isUser, 
+        timestamp: Date.now() 
+      });
+      
+      // 최근 10개만 유지
+      if (conversationHistory.length > 10) {
+        conversationHistory.shift();
+      }
+
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
       
       const bubble = document.createElement('div');
       bubble.className = 'message-bubble';
-      bubble.textContent = text;
+      
+      // 줄바꿈 처리
+      const lines = text.split('\n');
+      lines.forEach((line, index) => {
+        if (index > 0) bubble.appendChild(document.createElement('br'));
+        bubble.appendChild(document.createTextNode(line));
+      });
       
       messageDiv.appendChild(bubble);
       chatbotMessages.appendChild(messageDiv);
       chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+
+      // 빠른 응답 버튼 업데이트
+      updateQuickReplies();
     }
 
-    // 챗봇 응답 생성
-    function getBotResponse(userMessage) {
+    // 의도 파악 (자연어 처리 개선)
+    function detectIntent(message) {
+      const intents = {
+        greeting: ['안녕', 'hello', 'hi', '하이', '헬로'],
+        login: ['로그인', 'login', '접속', '로그'],
+        signup: ['회원가입', '가입', 'signup', '등록'],
+        password: ['비밀번호', 'password', '찾기', 'pw', '비번'],
+        help: ['도움', 'help', '도와', '어떻게', '방법'],
+        service: ['서비스', '소개', '뭐', 'what', '무엇', '에러아카이브'],
+        error: ['에러', 'error', '오류', '문제', '버그'],
+        thanks: ['고마워', '감사', 'thanks', 'thank', '고맙']
+      };
+      
+      const msg = message.toLowerCase();
+      for (const [intent, keywords] of Object.entries(intents)) {
+        if (keywords.some(keyword => msg.includes(keyword))) {
+          return intent;
+        }
+      }
+      return 'unknown';
+    }
+
+    // 챗봇 응답 생성 (로컬 + API)
+    async function getBotResponse(userMessage) {
+      const intent = detectIntent(userMessage);
       const message = userMessage.toLowerCase().trim();
       
-      // 인사
-      if (message.includes('안녕') || message.includes('hello') || message.includes('hi')) {
-        return '안녕하세요! Error Archive 챗봇입니다. 무엇을 도와드릴까요?';
+      // 로컬 규칙 기반 응답
+      let response = getLocalResponse(intent, message);
+      
+      // 백엔드 API 연동 시도
+      try {
+        const apiResponse = await fetch('/api/chatbot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message: userMessage,
+            intent: intent,
+            history: conversationHistory.slice(-3) // 최근 3개만 전송
+          })
+        });
+        
+        if (apiResponse.ok) {
+          const data = await apiResponse.json();
+          if (data.response) {
+            response = data.response;
+            // 대화 로그 저장
+            saveConversationLog(userMessage, response);
+          }
+        }
+      } catch (error) {
+        console.log('API 호출 실패, 로컬 응답 사용');
       }
       
-      // 로그인 관련
-      if (message.includes('로그인') || message.includes('login')) {
-        return '로그인 페이지에서 아이디와 비밀번호를 입력하시면 됩니다. 카카오나 네이버 계정으로도 로그인할 수 있어요!';
-      }
-      
-      // 회원가입
-      if (message.includes('회원가입') || message.includes('가입') || message.includes('signup')) {
-        return '회원가입은 상단의 "회원가입" 링크를 클릭하시면 됩니다.';
-      }
-      
-      // 비밀번호 찾기
-      if (message.includes('비밀번호') || message.includes('password') || message.includes('찾기')) {
-        return '비밀번호를 찾으시려면 상단의 "ID/PW 찾기" 링크를 이용해주세요.';
-      }
-      
-      // 도움말
-      if (message.includes('도움') || message.includes('help') || message.includes('도와')) {
-        return '다음과 같은 질문에 답변할 수 있어요:\n- 로그인 방법\n- 회원가입\n- 비밀번호 찾기\n- 서비스 소개';
-      }
-      
-      // 서비스 소개
-      if (message.includes('서비스') || message.includes('소개') || message.includes('뭐') || message.includes('what')) {
-        return 'Error Archive는 에러 로그를 관리하고 분석하는 서비스입니다. 개발자들이 에러를 체계적으로 관리할 수 있도록 도와드려요!';
-      }
-      
-      // 기본 응답
-      const responses = [
-        '죄송해요, 그 질문에 대해 정확히 답변드리기 어려워요. 다른 질문을 해주시겠어요?',
-        '좀 더 구체적으로 질문해주시면 도와드릴 수 있어요!',
-        '로그인, 회원가입, 비밀번호 찾기 등에 대해 물어보실 수 있어요.',
-      ];
-      return responses[Math.floor(Math.random() * responses.length)];
+      return response;
     }
 
-    // 메시지 전송
-    function sendMessage() {
+    // 로컬 응답 생성
+    function getLocalResponse(intent, message) {
+      switch(intent) {
+        case 'greeting':
+          const user = JSON.parse(localStorage.getItem('user'));
+          if (user) {
+            return `안녕하세요, ${user.name}님! Error Archive 챗봇입니다. 무엇을 도와드릴까요?`;
+          }
+          return '안녕하세요! Error Archive 챗봇입니다. 무엇을 도와드릴까요?';
+        
+        case 'login':
+          return '로그인 페이지에서 아이디와 비밀번호를 입력하시면 됩니다. 카카오나 네이버 계정으로도 로그인할 수 있어요!';
+        
+        case 'signup':
+          return '회원가입은 상단의 "회원가입" 링크를 클릭하시면 됩니다.';
+        
+        case 'password':
+          return '비밀번호를 찾으시려면 상단의 "ID/PW 찾기" 링크를 이용해주세요.';
+        
+        case 'help':
+          return '다음과 같은 질문에 답변할 수 있어요:\n- 로그인 방법\n- 회원가입\n- 비밀번호 찾기\n- 서비스 소개\n- 에러 로그 관리';
+        
+        case 'service':
+          return 'Error Archive는 에러 로그를 관리하고 분석하는 서비스입니다. 개발자들이 에러를 체계적으로 관리할 수 있도록 도와드려요!';
+        
+        case 'error':
+          return '에러 로그를 관리하고 싶으시다면 로그인 후 게시판에서 에러를 등록하고 해결 방법을 공유할 수 있어요!';
+        
+        case 'thanks':
+          return '천만에요! 😊 다른 도움이 필요하시면 언제든지 말씀해주세요!';
+        
+        default:
+          const responses = [
+            '죄송해요, 그 질문에 대해 정확히 답변드리기 어려워요. 다른 질문을 해주시겠어요?',
+            '좀 더 구체적으로 질문해주시면 도와드릴 수 있어요!',
+            '로그인, 회원가입, 비밀번호 찾기, 서비스 소개 등에 대해 물어보실 수 있어요.',
+          ];
+          return responses[Math.floor(Math.random() * responses.length)];
+      }
+    }
+
+    // 대화 로그 저장
+    function saveConversationLog(question, answer) {
+      try {
+        fetch('/api/chatbot/logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: question,
+            answer: answer,
+            timestamp: new Date().toISOString()
+          })
+        }).catch(err => console.log('로그 저장 실패:', err));
+      } catch (error) {
+        console.log('로그 저장 오류:', error);
+      }
+    }
+
+    // 빠른 응답 버튼 업데이트
+    function updateQuickReplies() {
+      quickReplies.innerHTML = '';
+      const replies = ['로그인 방법', '회원가입', '비밀번호 찾기', '서비스 소개'];
+      
+      replies.forEach(reply => {
+        const button = document.createElement('button');
+        button.className = 'quick-reply-btn';
+        button.textContent = reply;
+        button.onclick = () => {
+          chatbotInput.value = reply;
+          sendMessage();
+        };
+        quickReplies.appendChild(button);
+      });
+    }
+
+    // 메시지 전송 (타이핑 애니메이션 포함)
+    async function sendMessage() {
       const message = chatbotInput.value.trim();
       if (!message) return;
       
       addMessage(message, true);
       chatbotInput.value = '';
       
-      // 챗봇 응답 (약간의 지연)
-      setTimeout(() => {
-        const response = getBotResponse(message);
-        addMessage(response, false);
-      }, 500);
+      // 타이핑 인디케이터 표시
+      addTypingIndicator();
+      
+      // 챗봇 응답 (API 호출 포함)
+      try {
+        const response = await getBotResponse(message);
+        removeTypingIndicator();
+        
+        // 자연스러운 지연 후 응답
+        setTimeout(() => {
+          addMessage(response, false);
+        }, 300);
+      } catch (error) {
+        removeTypingIndicator();
+        addMessage('죄송해요, 일시적인 오류가 발생했어요. 잠시 후 다시 시도해주세요.', false);
+      }
+    }
+
+    // 음성 입력 기능
+    let recognition = null;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+      recognition.lang = 'ko-KR';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        chatbotInput.value = transcript;
+        sendMessage();
+      };
+
+      recognition.onerror = (event) => {
+        console.log('음성 인식 오류:', event.error);
+        voiceInputBtn.classList.remove('recording');
+      };
+
+      recognition.onend = () => {
+        voiceInputBtn.classList.remove('recording');
+      };
+
+      voiceInputBtn.addEventListener('click', () => {
+        if (recognition && !voiceInputBtn.classList.contains('recording')) {
+          voiceInputBtn.classList.add('recording');
+          recognition.start();
+        } else if (recognition) {
+          recognition.stop();
+          voiceInputBtn.classList.remove('recording');
+        }
+      });
+    } else {
+      voiceInputBtn.style.display = 'none';
     }
 
     chatbotSend.addEventListener('click', sendMessage);
@@ -438,9 +695,10 @@
       }
     });
 
-    // 초기 메시지
+    // 초기 메시지 및 빠른 응답 버튼
     setTimeout(() => {
       addMessage('안녕하세요! Error Archive 챗봇입니다. 무엇을 도와드릴까요?', false);
+      updateQuickReplies();
     }, 500);
   })();
   </script>
