@@ -719,6 +719,13 @@ app.get("/api/roulette/history", async (req, res) => {
 });
 
 // ===============================
+// ✅ Health Check 엔드포인트
+// ===============================
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok", message: "Backend is healthy" });
+});
+
+// ===============================
 // ✅ 서버 실행
 // ===============================
 app.listen(3000, "0.0.0.0", () => {
