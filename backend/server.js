@@ -731,3 +731,27 @@ app.get("/api/health", (req, res) => {
 app.listen(3000, "0.0.0.0", () => {
   console.log(`✅ Backend running on ${PUBLIC_IP}`);
 });
+
+// ===============================
+// ❌ 취약한 코드 (SonarQube 테스트용)
+// ===============================
+
+// SQL Injection 취약점 예시
+app.post('/api/test/search', async (req, res) => {
+  const { keyword } = req.body;
+  // 직접 쿼리 문자열에 사용자 입력 삽입 (위험!)
+  const query = `SELECT * FROM posts WHERE title LIKE '%${keyword}%'`;
+  // 실제로는 MongoDB를 사용하지만, SonarQube가 패턴을 감지함
+  res.json({ message: "This is vulnerable code for testing" });
+});
+
+// 하드코딩된 비밀번호
+const TEST_ADMIN_PASSWORD = "admin123";
+app.post('/api/test/admin', async (req, res) => {
+  const { password } = req.body;
+  if (password === TEST_ADMIN_PASSWORD) {
+    res.json({ success: true, message: "Admin access granted" });
+  } else {
+    res.json({ success: false, message: "Invalid password" });
+  }
+});
