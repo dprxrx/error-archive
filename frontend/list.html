@@ -8,88 +8,16 @@
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/layout.css">
   <link rel="stylesheet" href="assets/css/list.css">
-  <style>
-    /* 겨울 맞이 이벤트 배너 */
-    #winter-event-banner {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 12px 20px;
-      text-align: center;
-      position: relative;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      z-index: 1000;
-      display: block;
-    }
-
-    .event-banner-content {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 15px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .event-banner-link {
-      background: white;
-      color: #667eea;
-      padding: 6px 15px;
-      border-radius: 20px;
-      text-decoration: none;
-      font-weight: bold;
-      transition: transform 0.2s;
-    }
-
-    .event-banner-link:hover {
-      transform: scale(1.05);
-    }
-
-    .event-banner-close {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 0;
-      width: 24px;
-      height: 24px;
-      margin-left: auto;
-    }
-
-    .event-banner-close:hover {
-      opacity: 0.7;
-    }
-  </style>
 </head>
 <body>
 
-  <!-- 겨울 맞이 이벤트 배너 (활성화) -->
-  <div id="winter-event-banner">
-    <div class="event-banner-content">
-      <span>🎄 겨울 맞이 이벤트 진행 중! 룰렛 돌리고 선물 받자! 🎁</span>
-      <a href="roulette.html" class="event-banner-link">참여하기 →</a>
-      <button class="event-banner-close" onclick="closeEventBanner()">✕</button>
-    </div>
-  </div>
-
-  <!-- 상단 네비게이션 -->
+  <!-- 상단 네비게이션 (가을 테마: 배너 없음, 테마 전환 버튼 없음) -->
   <header class="nav-bar">
     <div class="nav-left">
       <img src="assets/logo_img.png" alt="Error Archive Logo" class="nav-logo">
       <a href="list" class="nav-list">Error List</a>
     </div>
     <div class="nav-right">
-      <button id="theme-toggle" onclick="toggleTheme()" style="
-        background: rgba(255,255,255,0.9);
-        border: 2px solid #667eea;
-        padding: 8px 16px;
-        border-radius: 20px;
-        cursor: pointer;
-        font-weight: bold;
-        color: #667eea;
-        margin-right: 10px;
-        font-size: 14px;
-      ">❄️ 겨울 테마</button>
       <div class="dropdown" id="mypage-dropdown">
         <button class="nav-link" id="mypage-btn">MY Page ▾</button>
         <div class="dropdown-content" id="mypage-menu">
@@ -196,22 +124,8 @@
     nameTag.style.marginRight = "10px";
     navRight.prepend(nameTag);
 
-    // ✅ 테마 토글 버튼 초기화 (겨울 테마로 설정)
-    const currentTheme = 'winter';
-    localStorage.setItem('theme', 'winter');
-    const themeToggle = document.getElementById('theme-toggle');
-    if (themeToggle) {
-      themeToggle.textContent = '❄️ 겨울 테마';
-    }
-    
-    // ✅ 겨울 맞이 이벤트 배너 표시 (항상 표시)
-    const bannerClosed = localStorage.getItem('eventBannerClosed') === 'true';
-    if (!bannerClosed) {
-      const banner = document.getElementById('winter-event-banner');
-      if (banner) {
-        banner.style.display = 'block';
-      }
-    }
+    // ✅ 가을 테마로 고정 (테마 전환 버튼 없음)
+    localStorage.setItem('theme', 'autumn');
 
     // ✅ 모드별 UI 표시 제어
     if (userData.role === "admin" || mode === "my") {
@@ -367,21 +281,6 @@
     fetchPosts();
   });
 
-  // 이벤트 배너 닫기
-  function closeEventBanner() {
-    const banner = document.getElementById('winter-event-banner');
-    if (banner) {
-      banner.style.display = 'none';
-      localStorage.setItem('eventBannerClosed', 'true');
-    }
-  }
-
-  // 테마 전환 함수 (시연용 - 비활성화)
-  function toggleTheme() {
-    // 시연용으로는 테마 전환 비활성화
-    alert('시연 모드: 테마 전환은 롤링 업데이트로 진행됩니다.');
-  }
-
   // ✅ 뒤로가기 방지
   window.addEventListener("pageshow", (event) => {
     const userData = JSON.parse(localStorage.getItem("user"));
@@ -394,4 +293,3 @@
 
 </body>
 </html>
-
