@@ -18,6 +18,7 @@
       position: relative;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
       z-index: 1000;
+      display: block;
     }
 
     .event-banner-content {
@@ -62,8 +63,8 @@
 </head>
 <body>
 
-  <!-- 겨울 맞이 이벤트 배너 -->
-  <div id="winter-event-banner" style="display: none;">
+  <!-- 겨울 맞이 이벤트 배너 (활성화) -->
+  <div id="winter-event-banner">
     <div class="event-banner-content">
       <span>🎄 겨울 맞이 이벤트 진행 중! 룰렛 돌리고 선물 받자! 🎁</span>
       <a href="roulette.html" class="event-banner-link">참여하기 →</a>
@@ -88,7 +89,7 @@
         color: #667eea;
         margin-right: 10px;
         font-size: 14px;
-      ">🍂 가을 테마</button>
+      ">❄️ 겨울 테마</button>
       <div class="dropdown" id="mypage-dropdown">
         <button class="nav-link" id="mypage-btn">MY Page ▾</button>
         <div class="dropdown-content" id="mypage-menu">
@@ -195,17 +196,17 @@
     nameTag.style.marginRight = "10px";
     navRight.prepend(nameTag);
 
-    // ✅ 테마 토글 버튼 초기화
-    const currentTheme = localStorage.getItem('theme') || 'autumn';
+    // ✅ 테마 토글 버튼 초기화 (겨울 테마로 설정)
+    const currentTheme = 'winter';
+    localStorage.setItem('theme', 'winter');
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
-      themeToggle.textContent = currentTheme === 'winter' ? '❄️ 겨울 테마' : '🍂 가을 테마';
+      themeToggle.textContent = '❄️ 겨울 테마';
     }
     
-    // ✅ 겨울 맞이 이벤트 배너 표시 (테마가 겨울일 때만)
+    // ✅ 겨울 맞이 이벤트 배너 표시 (항상 표시)
     const bannerClosed = localStorage.getItem('eventBannerClosed') === 'true';
-    
-    if (currentTheme === 'winter' && !bannerClosed) {
+    if (!bannerClosed) {
       const banner = document.getElementById('winter-event-banner');
       if (banner) {
         banner.style.display = 'block';
@@ -333,7 +334,7 @@
     document.getElementById("search-btn").addEventListener("click", async () => {
       const keyword = document.getElementById("search-input").value.trim();
       const type = document.getElementById("search-type").value;
-      const role = JSON.parse(localStorage.getItem("user")).role; // ✅ 추가
+      const role = JSON.parse(localStorage.getItem("user")).role;
       if (!keyword) {
         alert("검색어를 입력하세요.");
         return;
@@ -375,30 +376,10 @@
     }
   }
 
-  // 테마 전환 함수
+  // 테마 전환 함수 (시연용 - 비활성화)
   function toggleTheme() {
-    const currentTheme = localStorage.getItem('theme') || 'autumn';
-    const newTheme = currentTheme === 'autumn' ? 'winter' : 'autumn';
-    localStorage.setItem('theme', newTheme);
-    
-    // 테마 토글 버튼 업데이트
-    const themeToggle = document.getElementById('theme-toggle');
-    if (themeToggle) {
-      themeToggle.textContent = newTheme === 'winter' ? '❄️ 겨울 테마' : '🍂 가을 테마';
-    }
-    
-    // 배너 표시/숨김 업데이트
-    const banner = document.getElementById('winter-event-banner');
-    const bannerClosed = localStorage.getItem('eventBannerClosed') === 'true';
-    
-    if (newTheme === 'winter' && !bannerClosed && banner) {
-      banner.style.display = 'block';
-    } else if (banner) {
-      banner.style.display = 'none';
-    }
-    
-    // 페이지 새로고침으로 테마 적용
-    window.location.reload();
+    // 시연용으로는 테마 전환 비활성화
+    alert('시연 모드: 테마 전환은 롤링 업데이트로 진행됩니다.');
   }
 
   // ✅ 뒤로가기 방지
@@ -413,3 +394,4 @@
 
 </body>
 </html>
+
