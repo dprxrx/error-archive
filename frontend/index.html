@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <!-- 가을 테마: 룰렛 배너 없음 (2025-01-20 수정) -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Error Archive - 로그인</title>
@@ -11,8 +10,8 @@
   <link rel="stylesheet" href="assets/css/layout.css">
   <link rel="stylesheet" href="assets/css/form.css">
 </head>
-<body class="theme-autumn">
-  <canvas id="leavesCanvas"></canvas>
+<body class="theme-winter">
+  <canvas id="snowCanvas"></canvas>
   <div class="main-container">
     <div class="logo-box">
       <img src="assets/logo_img_xmas.png" alt="Error Archive Logo" class="logo" id="logo-img">
@@ -47,70 +46,60 @@
     </div>
   </div>
 
-  <!--가을 테마 (낙엽 효과)-->
+  <!--겨울 테마 (눈내리는 효과)-->
   <script>
-  // 가을 테마: 낙엽 효과
-  const leavesCanvas = document.getElementById('leavesCanvas');
-  const leavesCtx = leavesCanvas.getContext('2d');
+  const canvas = document.getElementById('snowCanvas');
+  const ctx = canvas.getContext('2d');
 
-  leavesCanvas.width = window.innerWidth;
-  leavesCanvas.height = window.innerHeight;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
-  let leaves = [];
+  let snowflakes = [];
 
-  function createLeaf() {
-    const colors = ['#d2691e', '#cd853f', '#daa520', '#b8860b', '#8b4513'];
-    const size = Math.random() * 8 + 5;
+  function createSnowflake() {
+    const size = Math.random() * 2 + 1;
     return {
-      x: Math.random() * leavesCanvas.width,
-      y: Math.random() * -leavesCanvas.height,
-      speed: Math.random() * 1 + 0.5,
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      speed: Math.random() * 0.5 + 0.5,
       radius: size,
-      drift: (Math.random() - 0.5) * 2,
-      rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.1,
-      color: colors[Math.floor(Math.random() * colors.length)]
+      drift: (Math.random() - 0.5) * 1
     };
   }
 
-  function updateLeaves() {
-    leavesCtx.clearRect(0, 0, leavesCanvas.width, leavesCanvas.height);
+  function updateSnow() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    leaves.forEach(leaf => {
-      leaf.y += leaf.speed;
-      leaf.x += leaf.drift;
-      leaf.rotation += leaf.rotationSpeed;
+    snowflakes.forEach(flake => {
+      flake.y += flake.speed;
+      flake.x += flake.drift;
 
-      if (leaf.y > leavesCanvas.height) {
-        Object.assign(leaf, createLeaf());
-        leaf.y = 0;
+      if (flake.y > canvas.height) {
+        Object.assign(flake, createSnowflake());
+        flake.y = 0;
       }
 
-      leavesCtx.save();
-      leavesCtx.translate(leaf.x, leaf.y);
-      leavesCtx.rotate(leaf.rotation);
-      leavesCtx.beginPath();
-      leavesCtx.ellipse(0, 0, leaf.radius, leaf.radius * 0.6, 0, 0, Math.PI * 2);
-      leavesCtx.fillStyle = leaf.color;
-      leavesCtx.fill();
-      leavesCtx.restore();
+      ctx.beginPath();
+      ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fill();
     });
 
-    requestAnimationFrame(updateLeaves);
+    requestAnimationFrame(updateSnow);
   }
 
-  function initLeaves() {
-    leaves = Array.from({ length: 50 }, createLeaf);
-    updateLeaves();
+  function initSnow() {
+    snowflakes = Array.from({ length: 200 }, createSnowflake);
+    updateSnow();
   }
 
   window.addEventListener('resize', () => {
-    leavesCanvas.width = window.innerWidth;
-    leavesCanvas.height = window.innerHeight;
-    initLeaves();
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initSnow();
   });
 
-  initLeaves();
+  initSnow();
   </script>
 
   <script>
@@ -162,7 +151,7 @@
             name: data.user.name,
             role: data.user.role
           }));
-          localStorage.setItem("theme", "autumn");
+          localStorage.setItem("theme", "winter");
           alert(`${data.user?.name || login}님 환영합니다!`);
           window.location.href = "list";
         } else {
@@ -218,12 +207,12 @@
   </div>
 
   <style>
-  /* 가을 테마 스타일 */
-  body.theme-autumn {
-    background: linear-gradient(135deg, #f4a460 0%, #daa520 50%, #cd853f 100%);
+  /* 겨울 테마 스타일 */
+  body.theme-winter {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
 
-  #leavesCanvas {
+  #snowCanvas {
     position: fixed;
     top: 0;
     left: 0;
@@ -249,7 +238,7 @@
   }
 
   #chatbot-header {
-    background: linear-gradient(135deg, #f4a460 0%, #cd853f 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 15px;
     border-radius: 10px 10px 0 0;
@@ -298,7 +287,7 @@
   }
 
   .message.user .message-bubble {
-    background: #f4a460;
+    background: #667eea;
     color: white;
   }
 
@@ -327,7 +316,7 @@
 
   #chatbot-send {
     padding: 10px 20px;
-    background: #f4a460;
+    background: #667eea;
     color: white;
     border: none;
     border-radius: 20px;
@@ -335,7 +324,7 @@
   }
 
   #chatbot-send:hover {
-    background: #cd853f;
+    background: #5568d3;
   }
 
   #chatbot-toggle {
@@ -344,7 +333,7 @@
     right: 20px;
     width: 60px;
     height: 60px;
-    background: linear-gradient(135deg, #f4a460 0%, #cd853f 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     border-radius: 50%;
     color: white;
@@ -411,16 +400,16 @@
   }
 
   .quick-reply-btn:hover {
-    background: #f4a460;
+    background: #667eea;
     color: white;
-    border-color: #f4a460;
+    border-color: #667eea;
   }
 
   /* 음성 입력 버튼 */
   #voice-input-btn {
     background: none;
     border: none;
-    color: #f4a460;
+    color: #667eea;
     font-size: 18px;
     cursor: pointer;
     padding: 5px 10px;
