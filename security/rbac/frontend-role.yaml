@@ -1,0 +1,19 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: frontend-role
+  namespace: error-archive
+  labels:
+    app: frontend
+    security: enabled
+rules:
+# 최소 권한: ConfigMap 읽기만 허용
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["nginx-proxy-config"]
+  verbs: ["get", "list"]
+# Pod 상태 확인만 허용
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+

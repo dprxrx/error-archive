@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-networkpolicy
+  namespace: error-archive
+  labels:
+    app: frontend
+    security: enabled
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # 외부에서 Frontend로의 HTTP/HTTPS 트래픽만 허용
+  - from:
+    - namespaceSelector: {}  # 모든 네임스페이스에서 접근 가능
+    ports:
+    - protocol: TCP
+      port: 80
+  egress:
+  # Frontend에서 Backend로의 트래픽만 허용
+  - to:
+    - podSelector:
+        matchLabels:
+          app: backend
+    ports:
+    - protocol: TCP
+      port: 80
+  # DNS 쿼리 허용
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    - podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+

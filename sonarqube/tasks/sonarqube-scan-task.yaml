@@ -1,0 +1,74 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: sonarqube-scan
+  namespace: default
+spec:
+  description: |
+    SonarQube 코드 품질 스캔 Task
+    Backend (Node.js) 및 Frontend (JavaScript) 코드 분석
+  params:
+  - name: sonarqube-url
+    description: SonarQube 서버 URL
+    default: http://sonarqube.sonarqube:9000
+    type: string
+  - name: sonarqube-token
+    description: SonarQube 인증 토큰
+    type: string
+  - name: project-key
+    description: SonarQube 프로젝트 키
+    type: string
+  - name: project-name
+    description: SonarQube 프로젝트 이름
+    type: string
+  - name: source-path
+    description: 스캔할 소스 코드 경로
+    default: .
+    type: string
+  - name: language
+    description: 프로그래밍 언어 (js, ts, java 등)
+    default: js
+    type: string
+  workspaces:
+  - name: source
+    description: 소스 코드 워크스페이스
+  steps:
+  - name: sonar-scanner
+    image: sonarsource/sonar-scanner-cli:latest
+    env:
+    - name: SONAR_HOST_URL
+      value: $(params.sonarqube-url)
+    - name: SONAR_TOKEN
+      value: $(params.sonarqube-token)
+    - name: SONAR_PROJECT_KEY
+      value: $(params.project-key)
+    - name: SONAR_PROJECT_NAME
+      value: $(params.project-name)
+    script: |
+      #!/bin/sh
+      set -e
+      
+      cd $(workspaces.source.path)/$(params.source-path)
+      
+      # sonar-project.properties 생성
+      cat > sonar-project.properties <<EOF
+      sonar.projectKey=$(params.project-key)
+      sonar.projectName=$(params.project-name)
+      sonar.sources=.
+      sonar.sourceEncoding=UTF-8
+      sonar.host.url=$(params.sonarqube-url)
+      sonar.login=$(params.sonarqube-token)
+      EOF
+      
+      # 언어별 설정
+      if [ "$(params.language)" = "js" ]; then
+        echo "sonar.javascript.lcov.reportPaths=coverage/lcov.info" >> sonar-project.properties
+        echo "sonar.exclusions=**/node_modules/**,**/dist/**,**/build/**" >> sonar-project.properties
+      fi
+      
+      # SonarQube 스캔 실행
+      sonar-scanner
+      
+      echo "✅ SonarQube 스캔 완료"
+    workingDir: $(workspaces.source.path)/$(params.source-path)
+
