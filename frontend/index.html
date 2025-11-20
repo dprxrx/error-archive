@@ -10,26 +10,11 @@
   <link rel="stylesheet" href="assets/css/layout.css">
   <link rel="stylesheet" href="assets/css/form.css">
 </head>
-
 <body class="theme-autumn">
-  <canvas id="snowCanvas" style="display: none;"></canvas>
   <canvas id="leavesCanvas"></canvas>
   <div class="main-container">
     <div class="logo-box">
       <img src="assets/logo_img_xmas.png" alt="Error Archive Logo" class="logo" id="logo-img">
-    </div>
-    
-    <!-- 테마 전환 버튼 (시연용) -->
-    <div style="position: fixed; top: 20px; right: 20px; z-index: 10000;">
-      <button id="theme-toggle" onclick="toggleTheme()" style="
-        background: rgba(255,255,255,0.9);
-        border: 2px solid #667eea;
-        padding: 10px 20px;
-        border-radius: 20px;
-        cursor: pointer;
-        font-weight: bold;
-        color: #667eea;
-      ">🍂 가을 테마</button>
     </div>
 
     <div class="card-box">
@@ -60,7 +45,6 @@
       </div>
     </div>
   </div>
-
 
   <!--가을 테마 (낙엽 효과)-->
   <script>
@@ -128,64 +112,6 @@
   initLeaves();
   </script>
 
-  <!--겨울 테마 (눈내리는 효과)-->
-  <script>
-  const canvas = document.getElementById('snowCanvas');
-  const ctx = canvas.getContext('2d');
-
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  let snowflakes = [];
-
-  function createSnowflake() {
-    const size = Math.random() * 2 + 1;
-    return {
-      x: Math.random() * canvas.width,
-      y: Math.random() * -canvas.height,
-      speed: Math.random() * 0.5 + 0.5,
-      radius: size,
-      drift: (Math.random() - 0.5) * 1
-    };
-  }
-
-  function updateSnow() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    snowflakes.forEach(flake => {
-      flake.y += flake.speed;
-      flake.x += flake.drift;
-
-      if (flake.y > canvas.height) {
-        Object.assign(flake, createSnowflake());
-        flake.y = 0;
-      }
-
-      ctx.beginPath();
-      ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-      ctx.fill();
-    });
-
-    requestAnimationFrame(updateSnow);
-  }
-
-  function initSnow() {
-    snowflakes = Array.from({ length: 200 }, createSnowflake);
-    updateSnow();
-  }
-
-  window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    initSnow();
-  });
-
-  initSnow();
-  </script>
-
-
-
   <script>
     const form = document.getElementById("login-form");
     const loginInput = document.getElementById("login");
@@ -235,6 +161,7 @@
             name: data.user.name,
             role: data.user.role
           }));
+          localStorage.setItem("theme", "autumn");
           alert(`${data.user?.name || login}님 환영합니다!`);
           window.location.href = "list";
         } else {
@@ -290,26 +217,12 @@
   </div>
 
   <style>
-  /* 테마 전환 스타일 */
+  /* 가을 테마 스타일 */
   body.theme-autumn {
     background: linear-gradient(135deg, #f4a460 0%, #daa520 50%, #cd853f 100%);
   }
 
-  body.theme-winter {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-
   #leavesCanvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  #snowCanvas {
     position: fixed;
     top: 0;
     left: 0;
@@ -335,7 +248,7 @@
   }
 
   #chatbot-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #f4a460 0%, #cd853f 100%);
     color: white;
     padding: 15px;
     border-radius: 10px 10px 0 0;
@@ -384,7 +297,7 @@
   }
 
   .message.user .message-bubble {
-    background: #667eea;
+    background: #f4a460;
     color: white;
   }
 
@@ -413,7 +326,7 @@
 
   #chatbot-send {
     padding: 10px 20px;
-    background: #667eea;
+    background: #f4a460;
     color: white;
     border: none;
     border-radius: 20px;
@@ -421,7 +334,7 @@
   }
 
   #chatbot-send:hover {
-    background: #5568d3;
+    background: #cd853f;
   }
 
   #chatbot-toggle {
@@ -430,7 +343,7 @@
     right: 20px;
     width: 60px;
     height: 60px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #f4a460 0%, #cd853f 100%);
     border: none;
     border-radius: 50%;
     color: white;
@@ -497,16 +410,16 @@
   }
 
   .quick-reply-btn:hover {
-    background: #667eea;
+    background: #f4a460;
     color: white;
-    border-color: #667eea;
+    border-color: #f4a460;
   }
 
   /* 음성 입력 버튼 */
   #voice-input-btn {
     background: none;
     border: none;
-    color: #667eea;
+    color: #f4a460;
     font-size: 18px;
     cursor: pointer;
     padding: 5px 10px;
@@ -524,7 +437,7 @@
   </style>
 
   <script>
-  // 챗봇 로직 (고급 기능 포함)
+  // 챗봇 로직
   (function() {
     const chatbotContainer = document.getElementById('chatbot-container');
     const chatbotToggle = document.getElementById('chatbot-toggle');
@@ -535,11 +448,9 @@
     const quickReplies = document.getElementById('quick-replies');
     const voiceInputBtn = document.getElementById('voice-input-btn');
 
-    // 대화 히스토리 저장 (컨텍스트 기억)
     let conversationHistory = [];
     let isTyping = false;
 
-    // 챗봇 토글
     chatbotToggle.addEventListener('click', () => {
       chatbotContainer.style.display = chatbotContainer.style.display === 'none' ? 'flex' : 'none';
       chatbotToggle.style.display = chatbotContainer.style.display === 'none' ? 'flex' : 'none';
@@ -550,7 +461,6 @@
       chatbotToggle.style.display = 'flex';
     });
 
-    // 타이핑 인디케이터 추가
     function addTypingIndicator() {
       if (isTyping) return;
       isTyping = true;
@@ -561,26 +471,15 @@
       chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
     }
 
-    // 타이핑 인디케이터 제거
     function removeTypingIndicator() {
       const typing = chatbotMessages.querySelector('.typing');
       if (typing) typing.remove();
       isTyping = false;
     }
 
-    // 메시지 추가 (컨텍스트 기억 포함)
     function addMessage(text, isUser) {
-      // 대화 히스토리에 저장
-      conversationHistory.push({ 
-        text, 
-        isUser, 
-        timestamp: Date.now() 
-      });
-      
-      // 최근 10개만 유지
-      if (conversationHistory.length > 10) {
-        conversationHistory.shift();
-      }
+      conversationHistory.push({ text, isUser, timestamp: Date.now() });
+      if (conversationHistory.length > 10) conversationHistory.shift();
 
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
@@ -588,7 +487,6 @@
       const bubble = document.createElement('div');
       bubble.className = 'message-bubble';
       
-      // 줄바꿈 처리
       const lines = text.split('\n');
       lines.forEach((line, index) => {
         if (index > 0) bubble.appendChild(document.createElement('br'));
@@ -598,12 +496,9 @@
       messageDiv.appendChild(bubble);
       chatbotMessages.appendChild(messageDiv);
       chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-
-      // 빠른 응답 버튼 업데이트
       updateQuickReplies();
     }
 
-    // 의도 파악 (자연어 처리 개선)
     function detectIntent(message) {
       const intents = {
         greeting: ['안녕', 'hello', 'hi', '하이', '헬로'],
@@ -625,15 +520,12 @@
       return 'unknown';
     }
 
-    // 챗봇 응답 생성 (로컬 + API)
     async function getBotResponse(userMessage) {
       const intent = detectIntent(userMessage);
       const message = userMessage.toLowerCase().trim();
       
-      // 로컬 규칙 기반 응답
       let response = getLocalResponse(intent, message);
       
-      // 백엔드 API 연동 시도
       try {
         const apiResponse = await fetch('/api/chatbot', {
           method: 'POST',
@@ -641,7 +533,7 @@
           body: JSON.stringify({ 
             message: userMessage,
             intent: intent,
-            history: conversationHistory.slice(-3) // 최근 3개만 전송
+            history: conversationHistory.slice(-3)
           })
         });
         
@@ -649,8 +541,6 @@
           const data = await apiResponse.json();
           if (data.response) {
             response = data.response;
-            // 대화 로그 저장
-            saveConversationLog(userMessage, response);
           }
         }
       } catch (error) {
@@ -660,7 +550,6 @@
       return response;
     }
 
-    // 로컬 응답 생성
     function getLocalResponse(intent, message) {
       switch(intent) {
         case 'greeting':
@@ -701,24 +590,6 @@
       }
     }
 
-    // 대화 로그 저장
-    function saveConversationLog(question, answer) {
-      try {
-        fetch('/api/chatbot/logs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            question: question,
-            answer: answer,
-            timestamp: new Date().toISOString()
-          })
-        }).catch(err => console.log('로그 저장 실패:', err));
-      } catch (error) {
-        console.log('로그 저장 오류:', error);
-      }
-    }
-
-    // 빠른 응답 버튼 업데이트
     function updateQuickReplies() {
       quickReplies.innerHTML = '';
       const replies = ['로그인 방법', '회원가입', '비밀번호 찾기', '서비스 소개'];
@@ -735,7 +606,6 @@
       });
     }
 
-    // 메시지 전송 (타이핑 애니메이션 포함)
     async function sendMessage() {
       const message = chatbotInput.value.trim();
       if (!message) return;
@@ -743,15 +613,12 @@
       addMessage(message, true);
       chatbotInput.value = '';
       
-      // 타이핑 인디케이터 표시
       addTypingIndicator();
       
-      // 챗봇 응답 (API 호출 포함)
       try {
         const response = await getBotResponse(message);
         removeTypingIndicator();
         
-        // 자연스러운 지연 후 응답
         setTimeout(() => {
           addMessage(response, false);
         }, 300);
@@ -761,7 +628,6 @@
       }
     }
 
-    // 음성 입력 기능
     let recognition = null;
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
@@ -804,62 +670,12 @@
       }
     });
 
-    // 초기 메시지 및 빠른 응답 버튼
     setTimeout(() => {
       addMessage('안녕하세요! Error Archive 챗봇입니다. 무엇을 도와드릴까요?', false);
       updateQuickReplies();
     }, 500);
   })();
   </script>
-
-  <!-- 테마 전환 기능 -->
-  <script>
-  // 테마 전환 함수
-  function changeTheme(theme) {
-    const body = document.body;
-    const snowCanvas = document.getElementById('snowCanvas');
-    const leavesCanvas = document.getElementById('leavesCanvas');
-    const themeToggle = document.getElementById('theme-toggle');
-    const logoImg = document.getElementById('logo-img');
-    
-    if (theme === 'winter') {
-      body.classList.remove('theme-autumn');
-      body.classList.add('theme-winter');
-      snowCanvas.style.display = 'block';
-      leavesCanvas.style.display = 'none';
-      localStorage.setItem('theme', 'winter');
-      if (themeToggle) {
-        themeToggle.textContent = '❄️ 겨울 테마';
-        themeToggle.onclick = () => toggleTheme();
-      }
-      // 로고는 그대로 유지 (크리스마스 로고)
-    } else {
-      body.classList.remove('theme-winter');
-      body.classList.add('theme-autumn');
-      snowCanvas.style.display = 'none';
-      leavesCanvas.style.display = 'block';
-      localStorage.setItem('theme', 'autumn');
-      if (themeToggle) {
-        themeToggle.textContent = '🍂 가을 테마';
-        themeToggle.onclick = () => toggleTheme();
-      }
-    }
-  }
-
-  // 테마 토글 함수
-  function toggleTheme() {
-    const currentTheme = localStorage.getItem('theme') || 'autumn';
-    const newTheme = currentTheme === 'autumn' ? 'winter' : 'autumn';
-    changeTheme(newTheme);
-  }
-
-  // 페이지 로드 시 저장된 테마 적용
-  window.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('theme') || 'autumn';
-    changeTheme(savedTheme);
-  });
-  </script>
 </body>
 </html>
-
 
