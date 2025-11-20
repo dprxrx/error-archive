@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Archive - 로그인</title>
+
+  <!-- CSS 분리 구조 -->
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/form.css">
+</head>
+<body class="theme-winter">
+  <canvas id="snowCanvas"></canvas>
+  <div class="main-container">
+    <div class="logo-box">
+      <img src="assets/logo_img_xmas.png" alt="Error Archive Logo" class="logo" id="logo-img">
+    </div>
+
+    <div class="card-box">
+      <form id="login-form">
+        <label for="login">login</label>
+        <input type="text" id="login" name="login" placeholder="아이디 입력">
+
+        <label for="pw">pw</label>
+        <input type="password" id="pw" name="pw" placeholder="비밀번호 입력">
+
+        <div id="error-container"></div>
+        <button type="submit" class="btn-primary">로그인</button>
+      </form>
+
+      <button class="login-btn kakao-btn" id="kakao-login">
+        <img src="assets/kakao.png" alt="kakao_icon">
+        Continue with Kakao
+      </button>
+
+      <button class="login-btn naver-btn" id="naver-login">
+        <img src="assets/naver.png" alt="naver_icon">
+        Continue with Naver
+      </button>
+
+      <div class="sub-links">
+        <a href="signup">회원가입</a> |
+        <a href="find">ID/PW 찾기</a>
+      </div>
+    </div>
+  </div>
+
+  <!--겨울 테마 (눈내리는 효과)-->
+  <script>
+  const canvas = document.getElementById('snowCanvas');
+  const ctx = canvas.getContext('2d');
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let snowflakes = [];
+
+  function createSnowflake() {
+    const size = Math.random() * 2 + 1;
+    return {
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      speed: Math.random() * 0.5 + 0.5,
+      radius: size,
+      drift: (Math.random() - 0.5) * 1
+    };
+  }
+
+  function updateSnow() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    snowflakes.forEach(flake => {
+      flake.y += flake.speed;
+      flake.x += flake.drift;
+
+      if (flake.y > canvas.height) {
+        Object.assign(flake, createSnowflake());
+        flake.y = 0;
+      }
+
+      ctx.beginPath();
+      ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fill();
+    });
+
+    requestAnimationFrame(updateSnow);
+  }
+
+  function initSnow() {
+    snowflakes = Array.from({ length: 200 }, createSnowflake);
+    updateSnow();
+  }
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initSnow();
+  });
+
+  initSnow();
+  </script>
+
+  <script>
+    const form = document.getElementById("login-form");
+    const loginInput = document.getElementById("login");
+    const pwInput = document.getElementById("pw");
+    const errorContainer = document.getElementById("error-container");
+    const loginBtn = document.querySelector(".btn-primary");
+
+    // ✅ 입력 상태에 따라 버튼 스타일 변경
+    function updateLoginButton() {
+      if (loginInput.value.trim() && pwInput.value.trim()) {
+        loginBtn.style.opacity = "1";
+        loginBtn.style.cursor = "pointer";
+      } else {
+        loginBtn.style.opacity = "0.6";
+        loginBtn.style.cursor = "default";
+      }
+    }
+
+    loginInput.addEventListener("input", updateLoginButton);
+    pwInput.addEventListener("input", updateLoginButton);
+    window.onload = updateLoginButton;
+
+    // ✅ 일반 로그인 요청
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      errorContainer.innerHTML = "";
+
+      const login = loginInput.value.trim();
+      const pw = pwInput.value.trim();
+
+      if (!login && !pw) return showError("아이디와 비밀번호를 입력해주세요.");
+      if (!login) return showError("아이디를 입력해주세요.");
+      if (!pw) return showError("비밀번호를 입력해주세요.");
+
+      try {
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ login, pw }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem("user", JSON.stringify({
+            userId: login,
+            name: data.user.name,
+            role: data.user.role
+          }));
+          localStorage.setItem("theme", "winter");
+          alert(`${data.user?.name || login}님 환영합니다!`);
+          window.location.href = "list";
+        } else {
+          showError(data.message || "아이디 또는 비밀번호가 올바르지 않습니다.");
+        }
+      } catch (err) {
+        console.error("🚨 서버 연결 오류:", err);
+        showError("서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      }
+    });
+
+    // ✅ 카카오 로그인 버튼 클릭 시
+    document.getElementById("kakao-login").addEventListener("click", () => {
+      window.location.href = "/auth/kakao";
+    });
+
+    // ✅ 네이버 로그인 버튼 클릭 시
+    document.getElementById("naver-login").addEventListener("click", () => {
+      window.location.href = "/auth/naver";
+    });
+
+    // ✅ 에러 표시 함수
+    function showError(msg) {
+      const div = document.createElement("div");
+      div.className = "error-msg";
+      div.textContent = msg;
+      errorContainer.innerHTML = "";
+      errorContainer.appendChild(div);
+      makeButtonDim();
+    }
+
+    function makeButtonDim() {
+      loginBtn.style.opacity = "0.6";
+      loginBtn.style.cursor = "default";
+    }
+  </script>
+
+  <!-- 챗봇 UI -->
+  <button id="chatbot-toggle">💬</button>
+  
+  <div id="chatbot-container" style="display: none;">
+    <div id="chatbot-header">
+      <span>💬 챗봇 도우미</span>
+      <button id="chatbot-close">✕</button>
+    </div>
+    <div id="chatbot-messages"></div>
+  <div id="quick-replies"></div>
+  <div id="chatbot-input-container">
+    <button id="voice-input-btn" title="음성 입력">🎤</button>
+    <input type="text" id="chatbot-input" placeholder="메시지를 입력하세요...">
+    <button id="chatbot-send">전송</button>
+  </div>
+  </div>
+
+  <style>
+  /* 겨울 테마 스타일 */
+  body.theme-winter {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  #snowCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  #chatbot-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    z-index: 10000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  #chatbot-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #chatbot-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+  }
+
+  #chatbot-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f5f5f5;
+  }
+
+  .message {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .message.user {
+    align-items: flex-end;
+  }
+
+  .message.bot {
+    align-items: flex-start;
+  }
+
+  .message-bubble {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    word-wrap: break-word;
+  }
+
+  .message.user .message-bubble {
+    background: #667eea;
+    color: white;
+  }
+
+  .message.bot .message-bubble {
+    background: white;
+    color: #333;
+    border: 1px solid #e0e0e0;
+  }
+
+  #chatbot-input-container {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #e0e0e0;
+    background: white;
+    border-radius: 0 0 10px 10px;
+  }
+
+  #chatbot-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    outline: none;
+    margin-right: 10px;
+  }
+
+  #chatbot-send {
+    padding: 10px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+
+  #chatbot-send:hover {
+    background: #5568d3;
+  }
+
+  #chatbot-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+  }
+
+  #chatbot-toggle:hover {
+    transform: scale(1.1);
+  }
+
+  /* 타이핑 애니메이션 */
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 10px;
+  }
+
+  .typing-indicator span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #999;
+    animation: typing 1.4s infinite;
+  }
+
+  .typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-10px); }
+  }
+
+  /* 빠른 응답 버튼 */
+  #quick-replies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    border-top: 1px solid #e0e0e0;
+    background: #f9f9f9;
+  }
+
+  .quick-reply-btn {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+
+  .quick-reply-btn:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+  }
+
+  /* 음성 입력 버튼 */
+  #voice-input-btn {
+    background: none;
+    border: none;
+    color: #667eea;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px 10px;
+  }
+
+  #voice-input-btn.recording {
+    color: #ff4444;
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  </style>
+
+  <script>
+  // 챗봇 로직
+  (function() {
+    const chatbotContainer = document.getElementById('chatbot-container');
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+    const chatbotClose = document.getElementById('chatbot-close');
+    const chatbotMessages = document.getElementById('chatbot-messages');
+    const chatbotInput = document.getElementById('chatbot-input');
+    const chatbotSend = document.getElementById('chatbot-send');
+    const quickReplies = document.getElementById('quick-replies');
+    const voiceInputBtn = document.getElementById('voice-input-btn');
+
+    let conversationHistory = [];
+    let isTyping = false;
+
+    chatbotToggle.addEventListener('click', () => {
+      chatbotContainer.style.display = chatbotContainer.style.display === 'none' ? 'flex' : 'none';
+      chatbotToggle.style.display = chatbotContainer.style.display === 'none' ? 'flex' : 'none';
+    });
+
+    chatbotClose.addEventListener('click', () => {
+      chatbotContainer.style.display = 'none';
+      chatbotToggle.style.display = 'flex';
+    });
+
+    function addTypingIndicator() {
+      if (isTyping) return;
+      isTyping = true;
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message bot typing';
+      typingDiv.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+      chatbotMessages.appendChild(typingDiv);
+      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+      const typing = chatbotMessages.querySelector('.typing');
+      if (typing) typing.remove();
+      isTyping = false;
+    }
+
+    function addMessage(text, isUser) {
+      conversationHistory.push({ text, isUser, timestamp: Date.now() });
+      if (conversationHistory.length > 10) conversationHistory.shift();
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+      
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+      
+      const lines = text.split('\n');
+      lines.forEach((line, index) => {
+        if (index > 0) bubble.appendChild(document.createElement('br'));
+        bubble.appendChild(document.createTextNode(line));
+      });
+      
+      messageDiv.appendChild(bubble);
+      chatbotMessages.appendChild(messageDiv);
+      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+      updateQuickReplies();
+    }
+
+    function detectIntent(message) {
+      const intents = {
+        greeting: ['안녕', 'hello', 'hi', '하이', '헬로'],
+        login: ['로그인', 'login', '접속', '로그'],
+        signup: ['회원가입', '가입', 'signup', '등록'],
+        password: ['비밀번호', 'password', '찾기', 'pw', '비번'],
+        help: ['도움', 'help', '도와', '어떻게', '방법'],
+        service: ['서비스', '소개', '뭐', 'what', '무엇', '에러아카이브'],
+        error: ['에러', 'error', '오류', '문제', '버그'],
+        thanks: ['고마워', '감사', 'thanks', 'thank', '고맙']
+      };
+      
+      const msg = message.toLowerCase();
+      for (const [intent, keywords] of Object.entries(intents)) {
+        if (keywords.some(keyword => msg.includes(keyword))) {
+          return intent;
+        }
+      }
+      return 'unknown';
+    }
+
+    async function getBotResponse(userMessage) {
+      const intent = detectIntent(userMessage);
+      const message = userMessage.toLowerCase().trim();
+      
+      let response = getLocalResponse(intent, message);
+      
+      try {
+        const apiResponse = await fetch('/api/chatbot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message: userMessage,
+            intent: intent,
+            history: conversationHistory.slice(-3)
+          })
+        });
+        
+        if (apiResponse.ok) {
+          const data = await apiResponse.json();
+          if (data.response) {
+            response = data.response;
+          }
+        }
+      } catch (error) {
+        console.log('API 호출 실패, 로컬 응답 사용');
+      }
+      
+      return response;
+    }
+
+    function getLocalResponse(intent, message) {
+      switch(intent) {
+        case 'greeting':
+          const user = JSON.parse(localStorage.getItem('user'));
+          if (user) {
+            return `안녕하세요, ${user.name}님! Error Archive 챗봇입니다. 무엇을 도와드릴까요?`;
+          }
+          return '안녕하세요! Error Archive 챗봇입니다. 무엇을 도와드릴까요?';
+        
+        case 'login':
+          return '로그인 페이지에서 아이디와 비밀번호를 입력하시면 됩니다. 카카오나 네이버 계정으로도 로그인할 수 있어요!';
+        
+        case 'signup':
+          return '회원가입은 상단의 "회원가입" 링크를 클릭하시면 됩니다.';
+        
+        case 'password':
+          return '비밀번호를 찾으시려면 상단의 "ID/PW 찾기" 링크를 이용해주세요.';
+        
+        case 'help':
+          return '다음과 같은 질문에 답변할 수 있어요:\n- 로그인 방법\n- 회원가입\n- 비밀번호 찾기\n- 서비스 소개\n- 에러 로그 관리';
+        
+        case 'service':
+          return 'Error Archive는 에러 로그를 관리하고 분석하는 서비스입니다. 개발자들이 에러를 체계적으로 관리할 수 있도록 도와드려요!';
+        
+        case 'error':
+          return '에러 로그를 관리하고 싶으시다면 로그인 후 게시판에서 에러를 등록하고 해결 방법을 공유할 수 있어요!';
+        
+        case 'thanks':
+          return '천만에요! 😊 다른 도움이 필요하시면 언제든지 말씀해주세요!';
+        
+        default:
+          const responses = [
+            '죄송해요, 그 질문에 대해 정확히 답변드리기 어려워요. 다른 질문을 해주시겠어요?',
+            '좀 더 구체적으로 질문해주시면 도와드릴 수 있어요!',
+            '로그인, 회원가입, 비밀번호 찾기, 서비스 소개 등에 대해 물어보실 수 있어요.',
+          ];
+          return responses[Math.floor(Math.random() * responses.length)];
+      }
+    }
+
+    function updateQuickReplies() {
+      quickReplies.innerHTML = '';
+      const replies = ['로그인 방법', '회원가입', '비밀번호 찾기', '서비스 소개'];
+      
+      replies.forEach(reply => {
+        const button = document.createElement('button');
+        button.className = 'quick-reply-btn';
+        button.textContent = reply;
+        button.onclick = () => {
+          chatbotInput.value = reply;
+          sendMessage();
+        };
+        quickReplies.appendChild(button);
+      });
+    }
+
+    async function sendMessage() {
+      const message = chatbotInput.value.trim();
+      if (!message) return;
+      
+      addMessage(message, true);
+      chatbotInput.value = '';
+      
+      addTypingIndicator();
+      
+      try {
+        const response = await getBotResponse(message);
+        removeTypingIndicator();
+        
+        setTimeout(() => {
+          addMessage(response, false);
+        }, 300);
+      } catch (error) {
+        removeTypingIndicator();
+        addMessage('죄송해요, 일시적인 오류가 발생했어요. 잠시 후 다시 시도해주세요.', false);
+      }
+    }
+
+    let recognition = null;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+      recognition.lang = 'ko-KR';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        chatbotInput.value = transcript;
+        sendMessage();
+      };
+
+      recognition.onerror = (event) => {
+        console.log('음성 인식 오류:', event.error);
+        voiceInputBtn.classList.remove('recording');
+      };
+
+      recognition.onend = () => {
+        voiceInputBtn.classList.remove('recording');
+      };
+
+      voiceInputBtn.addEventListener('click', () => {
+        if (recognition && !voiceInputBtn.classList.contains('recording')) {
+          voiceInputBtn.classList.add('recording');
+          recognition.start();
+        } else if (recognition) {
+          recognition.stop();
+          voiceInputBtn.classList.remove('recording');
+        }
+      });
+    } else {
+      voiceInputBtn.style.display = 'none';
+    }
+
+    chatbotSend.addEventListener('click', sendMessage);
+    chatbotInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    setTimeout(() => {
+      addMessage('안녕하세요! Error Archive 챗봇입니다. 무엇을 도와드릴까요?', false);
+      updateQuickReplies();
+    }, 500);
+  })();
+  </script>
+</body>
+</html>
+

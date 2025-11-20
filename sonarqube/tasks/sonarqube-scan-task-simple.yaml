@@ -1,0 +1,86 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: sonarqube-scan
+  namespace: default
+spec:
+  description: |
+    SonarQube 코드 품질 스캔 Task (간단한 버전)
+    Backend (Node.js) 및 Frontend (JavaScript) 코드 분석
+  params:
+  - name: sonarqube-url
+    description: SonarQube 서버 URL
+    default: http://sonarqube.sonarqube:9000
+    type: string
+  - name: sonarqube-token
+    description: SonarQube 인증 토큰
+    type: string
+  - name: project-key
+    description: SonarQube 프로젝트 키
+    type: string
+  - name: project-name
+    description: SonarQube 프로젝트 이름
+    type: string
+  - name: source-path
+    description: 스캔할 소스 코드 경로
+    default: .
+    type: string
+  - name: language
+    description: 프로그래밍 언어 (js, ts, java 등)
+    default: js
+    type: string
+  workspaces:
+  - name: source
+    description: 소스 코드 워크스페이스
+  steps:
+  - name: sonar-scanner
+    image: sonarsource/sonar-scanner-cli:latest
+    env:
+    - name: SONAR_HOST_URL
+      value: $(params.sonarqube-url)
+    - name: SONAR_PROJECT_KEY
+      value: $(params.project-key)
+    - name: SONAR_PROJECT_NAME
+      value: $(params.project-name)
+    - name: SONAR_TOKEN
+      value: $(params.sonarqube-token)
+    script: |
+      #!/bin/sh
+      set -e
+      
+      if [ -z "$(params.sonarqube-token)" ]; then
+        echo "❌ SonarQube 토큰이 제공되지 않았습니다."
+        exit 1
+      fi
+      
+      SOURCE_DIR="$(workspaces.source.path)/$(params.source-path)"
+      
+      # sonar-project.properties를 /tmp에 생성 (권한 문제 해결)
+      PROPERTIES_FILE="/tmp/sonar-project.properties"
+      SCANNER_WORK_DIR="/tmp/.scannerwork"
+      
+      cat > $PROPERTIES_FILE <<EOF
+      sonar.projectKey=$(params.project-key)
+      sonar.projectName=$(params.project-name)
+      sonar.sources=$SOURCE_DIR
+      sonar.sourceEncoding=UTF-8
+      sonar.host.url=$(params.sonarqube-url)
+      sonar.token=$(params.sonarqube-token)
+      EOF
+      
+      # 언어별 설정
+      if [ "$(params.language)" = "js" ]; then
+        echo "sonar.javascript.lcov.reportPaths=coverage/lcov.info" >> $PROPERTIES_FILE
+        echo "sonar.exclusions=**/node_modules/**,**/dist/**,**/build/**" >> $PROPERTIES_FILE
+      fi
+      
+      # sonar-scanner 실행 (workDir를 명령줄 인자로 직접 전달, workingDir를 /tmp로 변경)
+      cd /tmp
+      sonar-scanner \
+        -Dproject.settings=$PROPERTIES_FILE \
+        -Dsonar.scanner.workDir=$SCANNER_WORK_DIR \
+        -Dsonar.sources=$SOURCE_DIR
+      
+      echo "✅ SonarQube 스캔 완료"
+    workingDir: /tmp
+

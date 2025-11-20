@@ -14,29 +14,26 @@ spec:
   - Ingress
   - Egress
   ingress:
-  # 외부에서 Frontend로의 HTTP/HTTPS 트래픽만 허용
-  - from:
-    - namespaceSelector: {}  # 모든 네임스페이스에서 접근 가능
-    ports:
+  # 외부에서 Frontend로의 HTTP 트래픽 허용
+  # 모든 소스에서 포트 80 접근 허용
+  - ports:
     - protocol: TCP
       port: 80
   egress:
-  # Frontend에서 Backend로의 트래픽만 허용
+  # Frontend에서 Backend로의 트래픽 허용
+  # Service를 통해 연결하므로 실제 Pod 포트인 3000만 허용
   - to:
     - podSelector:
         matchLabels:
           app: backend
     ports:
     - protocol: TCP
-      port: 80
-  # DNS 쿼리 허용
+      port: 3000
+  # DNS 쿼리 허용 (kube-system 네임스페이스의 DNS 서비스)
   - to:
     - namespaceSelector:
         matchLabels:
           name: kube-system
-    - podSelector:
-        matchLabels:
-          k8s-app: kube-dns
     ports:
     - protocol: UDP
       port: 53

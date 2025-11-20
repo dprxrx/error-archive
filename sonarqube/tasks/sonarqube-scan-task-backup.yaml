@@ -119,3 +119,4 @@ spec:
     secret:
       secretName: $(params.sonarqube-token-secret)
       optional: true
+

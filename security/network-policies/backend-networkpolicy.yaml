@@ -14,7 +14,7 @@ spec:
   - Ingress
   - Egress
   ingress:
-  # Frontend에서만 Backend로의 트래픽 허용
+  # Frontend에서만 Backend로의 트래픽 허용 (실제 Pod 포트인 3000)
   - from:
     - podSelector:
         matchLabels:
@@ -31,14 +31,11 @@ spec:
       port: 443  # HTTPS
     - protocol: TCP
       port: 80   # HTTP
-  # DNS 쿼리 허용
+  # DNS 쿼리 허용 (kube-system 네임스페이스의 DNS 서비스)
   - to:
     - namespaceSelector:
         matchLabels:
           name: kube-system
-    - podSelector:
-        matchLabels:
-          k8s-app: kube-dns
     ports:
     - protocol: UDP
       port: 53

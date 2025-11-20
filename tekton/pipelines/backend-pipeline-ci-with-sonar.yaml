@@ -1,12 +1,12 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: frontend-pipeline-ci
+  name: backend-pipeline-ci-with-sonar
   namespace: default
 spec:
   description: |
-    Frontend CI Pipeline - SonarQube 스캔 → 이미지 빌드 및 Harbor 푸시
-    배포는 ArgoCD가 담당합니다.
+    Backend CI Pipeline with SonarQube - 코드 스캔 후 이미지 빌드 및 Harbor 푸시
+    SonarQube 스캔에서 취약점이 발견되면 파이프라인이 실패합니다.
   params:
   - name: git-url
     description: Git repository URL
@@ -17,8 +17,8 @@ spec:
     default: main
     type: string
   - name: docker-image
-    description: Docker image name (e.g., repo/frontend:tag)
-    default: 192.168.0.169:443/project/error-archive-frontend:latest
+    description: Docker image name (e.g., repo/backend:tag)
+    default: 192.168.0.169:443/project/error-archive-backend:latest
     type: string
   - name: registry-url
     description: Docker registry URL
@@ -38,11 +38,11 @@ spec:
     type: string
   - name: sonarqube-project-key
     description: SonarQube 프로젝트 키
-    default: error-archive-frontend
+    default: error-archive-backend
     type: string
   - name: sonarqube-project-name
     description: SonarQube 프로젝트 이름
-    default: Error Archive Frontend
+    default: Error Archive Backend
     type: string
   workspaces:
   - name: shared-workspace
@@ -68,7 +68,7 @@ spec:
       name: read-sonarqube-token
     params:
     - name: secret-name
-      value: sonarqube-token-frontend
+      value: sonarqube-token-backend
     - name: secret-key
       value: token
   
@@ -88,7 +88,7 @@ spec:
     - name: project-name
       value: $(params.sonarqube-project-name)
     - name: source-path
-      value: frontend
+      value: backend
     - name: language
       value: js
     workspaces:
@@ -113,7 +113,7 @@ spec:
     - name: dockerfile-path
       value: "Dockerfile"
     - name: build-context
-      value: "frontend"
+      value: "backend"
     workspaces:
     - name: source
       workspace: shared-workspace

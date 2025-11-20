@@ -1,11 +1,12 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: frontend-pipeline-ci
+  name: frontend-pipeline-ci-theme
   namespace: default
 spec:
   description: |
-    Frontend CI Pipeline - SonarQube 스캔 → 이미지 빌드 및 Harbor 푸시
+    Frontend CI Pipeline for Theme Switching - SonarQube 없이 이미지 빌드 및 Harbor 푸시만 수행
+    테마 전환 시나리오 전용 파이프라인
     배포는 ArgoCD가 담당합니다.
   params:
   - name: git-url
@@ -32,18 +33,6 @@ spec:
     description: Docker registry password
     default: Harbor12345
     type: string
-  - name: sonarqube-url
-    description: SonarQube 서버 URL
-    default: http://sonarqube.sonarqube:9000
-    type: string
-  - name: sonarqube-project-key
-    description: SonarQube 프로젝트 키
-    default: error-archive-frontend
-    type: string
-  - name: sonarqube-project-name
-    description: SonarQube 프로젝트 이름
-    default: Error Archive Frontend
-    type: string
   workspaces:
   - name: shared-workspace
     description: Shared workspace for all tasks
@@ -59,46 +48,9 @@ spec:
     workspaces:
     - name: source
       workspace: shared-workspace
-  
-  # SonarQube 토큰 읽기
-  - name: read-sonarqube-token
-    runAfter:
-    - git-clone
-    taskRef:
-      name: read-sonarqube-token
-    params:
-    - name: secret-name
-      value: sonarqube-token-frontend
-    - name: secret-key
-      value: token
-  
-  # SonarQube 스캔 (git-clone 이후, docker-build-and-push 이전)
-  - name: sonarqube-scan
-    runAfter:
-    - read-sonarqube-token
-    taskRef:
-      name: sonarqube-scan
-    params:
-    - name: sonarqube-url
-      value: $(params.sonarqube-url)
-    - name: sonarqube-token
-      value: $(tasks.read-sonarqube-token.results.token)
-    - name: project-key
-      value: $(params.sonarqube-project-key)
-    - name: project-name
-      value: $(params.sonarqube-project-name)
-    - name: source-path
-      value: frontend
-    - name: language
-      value: js
-    workspaces:
-    - name: source
-      workspace: shared-workspace
-  
-  # Docker 빌드 및 푸시 (SonarQube 스캔 성공 후)
   - name: docker-build-and-push
     runAfter:
-    - sonarqube-scan
+    - git-clone
     taskRef:
       name: docker-build-and-push
     params:

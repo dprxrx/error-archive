@@ -1,0 +1,42 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: read-sonarqube-token
+  namespace: default
+spec:
+  description: |
+    Secret에서 SonarQube 토큰을 읽어서 결과로 출력
+  params:
+  - name: secret-name
+    description: Secret 이름
+    type: string
+  - name: secret-key
+    description: Secret 키 이름
+    default: token
+    type: string
+  results:
+  - name: token
+    description: 읽은 토큰 값
+  steps:
+  - name: read-token
+    image: busybox
+    script: |
+      #!/bin/sh
+      TOKEN_FILE="/var/secrets/$(params.secret-key)"
+      if [ -f "$TOKEN_FILE" ]; then
+        TOKEN=$(cat "$TOKEN_FILE" | tr -d '\n\r ')
+        echo -n "$TOKEN" > $(results.token.path)
+        echo "✅ 토큰을 읽었습니다: $(params.secret-name)/$(params.secret-key)"
+      else
+        echo "❌ Secret 파일을 찾을 수 없습니다: $TOKEN_FILE"
+        exit 1
+      fi
+    volumeMounts:
+    - name: sonarqube-token-secret
+      mountPath: /var/secrets
+      readOnly: true
+  volumes:
+  - name: sonarqube-token-secret
+    secret:
+      secretName: $(params.secret-name)
+
